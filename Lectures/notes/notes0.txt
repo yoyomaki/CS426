@@ -1,0 +1,57 @@
+Distributed system paradigms:
+-- Client-Server systems in the 80s
+-- Early Internet services in the 90s (Altavista, Inktomi, ...)
+-- Peer-to-Peer systems in the 00s (Napster, Kazaa, Gnutella, ...)
+-- Large-scale Internet services in the 00s (Google, Facebook, Amazon, NetFlix, LinkedIn, Yelp, ...)
+-- Mobile services in the 2010s
+-- Cloud computing in the 2010s
+-- IoT in the 2020s?
+
+What is an abstraction?
+-- A construct that hides complexity from programmer / user.
+-- Example: a file is an abstraction. Hides complexity of storage hardware.
+-- Example: a socket is an abstraction. Hides complexity of network hardware.
+-- Example: virtual memory is an abstraction. Hides complexity of memory hardware. 
+-- Traditionally, OS abstractions hide complexity of hardware from programmer. 
+
+What is a distributed system?
+http://research.microsoft.com/en-us/um/people/lamport/pubs/distributed-system.txt
+"A distributed system is one in which the failure of a computer you didn't even know existed can render your own computer unusable."
+-- machines interacting with each other over a network to perform some larger task.
+
+How/Why are systems distributed?
+
+Separation of client (edge, mobile device) from server-side (data center, cloud):
+-- edge devices are not powerful enough (in terms of compute power, battery lifetime).
+-- applications are inherently distributed (online games, social networks, etc.)
+
+The word service is overloaded: Amazon.com is a service; Amazon's Shopping Cart is a service; Amazon's S3 is a service. S3 is used by Shopping Cart which is used by Amazon.com.
+
+Multiple logical service combine to provide a single end-user application: user-facing webpages or mobile apps are composed of tens or hundreds of backend services.
+-- The lifecycle of a user interaction: phone to data center.
+
+Each service is tiered: web tier + compute tier + storage tier.
+-- The compute tier runs standard VMs (or containers). It is typically stateless or stores 'soft' state that can be reconstructed (e.g. caches).
+-- The storage tier is responsible for maintaining state.
+-- Why tier? Allows each tier to scale separately; logical separation of concerns. 
+-- Many applications might share a single storage service.
+
+Each storage service is replicated and partitioned to provide properties for state such as durability, availability, etc.
+
+Services are also be geo-distributed for disaster tolerance, locality to users.
+
+In summary: multiple idioms of distribution:
+- edge/core or device/cloud partitioning
+- composition of multiple services into an application
+- tiering within each service
+- replication for durability and availability
+- partitioning for scalability
+
+Why are distributed systems complex?
+-- Failures
+-- Concurrency
+
+Circle back to abstractions. OS abstractions hide the complexity of hardware from applications. Distributed systems abstractions hide the complexity of failures and concurrency from applications.
+
+Example distributed systems abstractions:
+-- key-value stores. Put a (key, value) pair. Get the value for a key. Applications do not have to worry about failures or concurrency.
