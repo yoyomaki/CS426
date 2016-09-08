@@ -5,7 +5,7 @@
 #endif
 /*
  * Copyright (c) 2014 Cesanta Software Limited
- * All rights reserved
+ * All rights reserved qq223
  */
 
 #ifndef MG_INTERNAL_HEADER_INCLUDED

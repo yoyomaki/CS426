@@ -22,7 +22,7 @@
 
 #define MG_VERSION "6.2"
 
-/* Local tweaks, applied before any of Mongoose's own headers. */
+/* Local tweaks, applied before any of Mongoose's own headers. qq223*/
 #ifdef MG_LOCALS
 #include <mg_locals.h>
 #endif
