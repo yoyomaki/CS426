@@ -9,7 +9,7 @@ using namespace std;
 struct node{
 	uint64_t id;
 	// pair = (neighbor node, edge length)
-	vector<pair<node*, int>> neighbors;
+	vector<nodex*> neighbors;
 	node(uint64_t i){id=i}
 };
 
