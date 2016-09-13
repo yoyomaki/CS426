@@ -1,6 +1,12 @@
 uint64_t graph::add_node(uint64_t node_id){
-    node* new_node = new node(node_id);
-    
+    unordered_map<uint64_t, node*>::iterator it = this->nodes.find(node_id);
+    //not find
+    if(it == this->nodes.end()){
+        node* new_node = new node(node_id);
+        this->nodes.insert({node_id,})
+    }else{
+        
+    }
 }
 
 

@@ -16,7 +16,9 @@ class graph{
 private:
 	unordered_map<uint64_t, node*> nodes;
 public:
+    //return 200 on success, 204 if the node already exists
 	uint64_t add_node(uint64_t node_id);
+    //
 	uint64_t add_edge(uint64_t node_a_id, uint64_t node_b_id);
 	uint64_t remove_node(uint64_t node_id);
 	uint64_t remove_edge(uint64_t node_a_id, uint64_t node_b_id);
