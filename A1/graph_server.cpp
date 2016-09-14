@@ -6,6 +6,8 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
 
   switch (ev) {
     case MG_EV_RECV:
+
+    
       // This event handler implements simple TCP echo server
       mg_send(nc, io->buf, io->len);  // Echo received data back
       mbuf_remove(io, io->len);      // Discard data from recv buffer

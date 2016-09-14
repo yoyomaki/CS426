@@ -1,16 +1,15 @@
 #pragma once
 #include "../libraray/mongoose.h"
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <utility>
 
 using namespace std;
 
 struct node{
 	uint64_t id;
-	// pair = (neighbor node, edge length)
-	vector<nodex*> neighbors;
-	node(uint64_t i){id=i}
+	vector<node*> neighbors;
+	node(uint64_t i){this->id=i;}
 };
 
 class graph{
