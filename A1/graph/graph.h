@@ -10,7 +10,7 @@ using namespace std;
 struct node{
 	uint64_t id;
 	unordered_set<node*> neighbors;
-	node(uint64_t i){this->id=i;}
+	node(uint64_t i){id=i;}
     bool operator==(node *another) const{
         return id == another->id;
     }
@@ -31,8 +31,12 @@ public:
     //400 if either node does not exists, or if node_a_id = node_b_id
 	uint64_t add_edge(uint64_t node_a_id, uint64_t node_b_id);
     
+    //return 200 on success, 400 if the node does not exist
 	uint64_t remove_node(uint64_t node_id);
+    
+    //return 200 on success, 400 if the edge does not exist
 	uint64_t remove_edge(uint64_t node_a_id, uint64_t node_b_id);
+    
 	uint64_t get_node(uint64_t node_id);
 	uint64_t get_edge(uint64_t node_a_id, uint64_t node_b_id);
 	uint64_t get_neighbors(uint64_t node_id);
