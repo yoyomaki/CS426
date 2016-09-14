@@ -98,7 +98,7 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
         both_node_exist = FALSE;
     }
     if (get_edge(node_a_id, node_b_id)) {
-        //bool visited[nodes.size()];
+        //bool visited[nodes.size()]; need to fix
         bool *visited = new bool[nodes.size()];
         for (int i = 0; i < nodes.size(); i++) {
             visited[i] = false;
