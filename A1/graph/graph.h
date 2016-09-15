@@ -2,22 +2,24 @@
 #include "../library/mongoose.h"
 #include <vector>
 #include <unordered_map>
-#include <unordered_set>
+//#include <unordered_set>
 #include <utility>
 #include <queue>
+#include <list>
+
 
 using namespace std;
 
 struct node{
 	uint64_t id;
-	unordered_set<node*> neighbors;
+	unordered_map<uint64_t, node*> neighbors;
 	node(uint64_t i){this->id=i;}
-    bool operator==(node *another) const{
-        return id == another->id;
-    }
-    bool operator==(uint64_t another_id) const{
-        return this->id == another_id;
-    }
+//    bool operator==(node *another) const{
+//        return id == another->id;
+//    }
+//    bool operator==(uint64_t another_id) const{
+//        return this->id == another_id;
+//    }
     
 };
 
@@ -48,9 +50,11 @@ public:
      */
 	pair<bool, bool> get_edge(uint64_t node_a_id, uint64_t node_b_id);
     
-    //return a set of nodes (all neighbors of node_id)
-    //return NULL if the node does not exist.
-	unordered_set<node*> get_neighbors(uint64_t node_id);
+    /**
+     Boolean indicates whether the node is in the graph.
+     The returned map returns the neighbors of the node.
+     */
+	pair<bool,unordered_map<uint64_t, node*> > get_neighbors(uint64_t node_id);
     
     /*
      int = shortest path length, if returned -1, then there is no path between node a and b.
