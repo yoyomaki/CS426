@@ -123,7 +123,7 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
             temp_path++;
             queue.pop_front();
             
-            // Get all adjacent vertices of the dequeued vertex s
+            // Get all adjacent vertices of the dequeued vertex s.
             // If a adjacent has not been visited, then mark it visited
             // and enqueue it
             for(i = get_neighbors(node_a_id).begin(); i != get_neighbors(node_a_id).end(); ++i) {
