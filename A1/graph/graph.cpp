@@ -20,9 +20,9 @@ uint64_t graph::add_edge(uint64_t node_a_id, uint64_t node_b_id){
     if(ita == this->nodes.end() || itb == this->nodes.end()){
         return 400;
     }
-    unordered_map<node*> a_neighbors = ita->second->neighbors;
-    unordered_map<node*> b_neighbors = itb->second->neighbors;
-    unordered_map<node*>::iterator ita_neighbors = a_neighbors.find(node_b_id);
+    unordered_map<uint64_t, node*> a_neighbors = ita->second->neighbors;
+    unordered_map<uint64_t, node*> b_neighbors = itb->second->neighbors;
+    unordered_map<uint64_t, node*>::iterator ita_neighbors = a_neighbors.find(node_b_id);
     if(ita_neighbors != a_neighbors.end()){
         return 204;
     }
@@ -36,10 +36,10 @@ uint64_t graph::remove_node(uint64_t node_id){
     if(it == this->nodes.end()){
         return 400;
     }else{
-        unordered_map<node*> nbs = it->second->neighbors;
-        unordered_map<node*>::iterator nit;
+        unordered_map<uint64_t, node*> nbs = it->second->neighbors;
+        unordered_map<uint64_t, node*>::iterator nit;
         for(nit = nbs.begin(); nit != nbs.end(); ++nit){
-            node* n = *nit;
+            node* n = nit->second;
             n->neighbors.erase(n->neighbors.find(node_id));
         }
         this->nodes.erase(it);
@@ -53,10 +53,10 @@ uint64_t graph::remove_edge(uint64_t node_a_id, uint64_t node_b_id){
     if(ita == this->nodes.end() || itb == this->nodes.end()){
         return 400;
     }
-    unordered_map<node*> a_neighbors = ita->second->neighbors;
-    unordered_map<node*> b_neighbors = itb->second->neighbors;
-    unordered_map<node*>::iterator ita_neighbors = a_neighbors.find(node_b_id);
-    unordered_map<node*>::iterator itb_neighbors = b_neighbors.find(node_a_id);
+    unordered_map<uint64_t, node*> a_neighbors = ita->second->neighbors;
+    unordered_map<uint64_t, node*> b_neighbors = itb->second->neighbors;
+    unordered_map<uint64_t, node*>::iterator ita_neighbors = a_neighbors.find(node_b_id);
+    unordered_map<uint64_t, node*>::iterator itb_neighbors = b_neighbors.find(node_a_id);
     if(ita_neighbors == a_neighbors.end()){
         return 400;
     }
