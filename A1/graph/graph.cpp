@@ -1,8 +1,10 @@
+#include "graph.h"
+
 uint64_t graph::add_node(uint64_t node_id){
     unordered_map<uint64_t, node*>::iterator it = this->nodes.find(node_id);
     if(it == this->nodes.end()){
         node* new_node = new node(node_id);
-        this->nodes.insert({node_id, new_node});
+        nodes.insert(make_pair(node_id, new_node));
         return 200;
     }else{
         return 204;
@@ -18,14 +20,14 @@ uint64_t graph::add_edge(uint64_t node_a_id, uint64_t node_b_id){
     if(ita == this->nodes.end() || itb == this->nodes.end()){
         return 400;
     }
-    unordered_set<node*> a_neighbors = ita->second->neighbors;
-    unordered_set<node*> b_neighbors = itb->second->neighbors;
-    unordered_set<node*>::iterator ita_neighbors = a_neighbors.find(node_b_id);
+    unordered_map<uint64_t, node*> a_neighbors = ita->second->neighbors;
+    unordered_map<uint64_t, node*> b_neighbors = itb->second->neighbors;
+    unordered_map<uint64_t, node*>::iterator ita_neighbors = a_neighbors.find(node_b_id);
     if(ita_neighbors != a_neighbors.end()){
         return 204;
     }
-    a_neighbors.insert(itb->second);
-    b_neighbors.insert(ita->second);
+    a_neighbors.insert(make_pair(node_b_id,itb->second));
+    b_neighbors.insert(make_pair(node_a_id,ita->second));
     return 200;
 }
 
@@ -34,10 +36,10 @@ uint64_t graph::remove_node(uint64_t node_id){
     if(it == this->nodes.end()){
         return 400;
     }else{
-        unordered_set<node*> nbs = it->second->neighbors;
-        unordered_set<node*>::iterator nit;
-        for(nit = nbs.begin(); nit < nbs.end(); ++nit){
-            node* n = *nit;
+        unordered_map<uint64_t, node*> nbs = it->second->neighbors;
+        unordered_map<uint64_t, node*>::iterator nit;
+        for(nit = nbs.begin(); nit != nbs.end(); ++nit){
+            node* n = nit->second;
             n->neighbors.erase(n->neighbors.find(node_id));
         }
         this->nodes.erase(it);
@@ -48,13 +50,13 @@ uint64_t graph::remove_node(uint64_t node_id){
 uint64_t graph::remove_edge(uint64_t node_a_id, uint64_t node_b_id){
     unordered_map<uint64_t, node*>::iterator ita = this->nodes.find(node_a_id);
     unordered_map<uint64_t, node*>::iterator itb = this->nodes.find(node_b_id);
-    if(ita == this->nodes.end() || itb == this->nodes.edn()){
+    if(ita == this->nodes.end() || itb == this->nodes.end()){
         return 400;
     }
-    unordered_set<node*> a_neighbors = ita->second->neighbors;
-    unordered_set<node*> b_neighbors = itb->second->neighbors;
-    unordered_set<node*>::iterator ita_neighbors = a_neighbors.find(node_b_id);
-    unordered_set<node*>::iterator itb_neighbors = b_neighbors.find(node_a_id);
+    unordered_map<uint64_t, node*> a_neighbors = ita->second->neighbors;
+    unordered_map<uint64_t, node*> b_neighbors = itb->second->neighbors;
+    unordered_map<uint64_t, node*>::iterator ita_neighbors = a_neighbors.find(node_b_id);
+    unordered_map<uint64_t, node*>::iterator itb_neighbors = b_neighbors.find(node_a_id);
     if(ita_neighbors == a_neighbors.end()){
         return 400;
     }
@@ -68,15 +70,15 @@ bool graph::get_node(uint64_t node_id){
 }
 
 pair<bool,bool> graph::get_edge(uint64_t node_a_id, uint64_t node_b_id){
-    bool edge_exist = FALSE;
-    bool both_node_exist = TRUE;
+    bool edge_exist = false;
+    bool both_node_exist = true;
     if (!get_node(node_a_id) || !get_node(node_b_id)) {
-        both_node_exist = FALSE;
+        both_node_exist = false;
     }
     if (get_node(node_a_id) && get_node(node_b_id)) {
         unordered_set<node*> neighbors_a = nodes[node_a_id]->neighbors;
         if(neighbors_a.find(node_b_id) != neighbors_a.end()) {
-            edge_exist = TRUE;
+            edge_exist = true;
         }
     }
     return make_pair(edge_exist, both_node_exist);
@@ -86,19 +88,19 @@ unordered_set<node*> graph::get_neighbors(uint64_t node_id){
     if (this->get_node(node_id)) {
         return nodes[node_id]->neighbors;
     } else {
-        return NULL;
+        return ;
     }
 }
 
 pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id){
-    bool both_node_exist = TRUE;
+    bool both_node_exist = true;
     uint64_t path = -1;
     uint64_t temp_path = 0;
     if (!get_node(node_a_id) || !get_node(node_b_id)) {
-        both_node_exist = FALSE;
+        both_node_exist = false;
     }
     if (get_edge(node_a_id, node_b_id)) {
-        //bool visited[nodes.size()];
+        //bool visited[nodes.size()]; need to fix
         bool *visited = new bool[nodes.size()];
         for (int i = 0; i < nodes.size(); i++) {
             visited[i] = false;

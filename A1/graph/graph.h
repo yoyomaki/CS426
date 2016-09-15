@@ -5,20 +5,23 @@
 #include <unordered_set>
 #include <utility>
 #include <queue>
+#include <string>
+#include <iostream>
 
 using namespace std;
 
 struct node{
 	uint64_t id;
-	unordered_set<node*> neighbors;
-	node(uint64_t i){this->id=i;}
+    unordered_map<uint64_t, node*> neighbors;
+	node(uint64_t i){id=i;}
+    /*
     bool operator==(node *another) const{
         return id == another->id;
     }
     bool operator==(uint64_t another_id) const{
-        return this->id == another_id;
+        return id == another_id;
     }
-    
+     */
 };
 
 class graph{
