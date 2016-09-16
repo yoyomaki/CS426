@@ -9,28 +9,6 @@ static struct mg_serve_http_opts s_http_server_opts;
 
 static graph my_graph;
 
-static void handle_sum_call(struct mg_connection *nc, struct http_message *hm) {
-    char n1[100], n2[100];
-    double result;
-    
-    /* Get form variables */
-    mg_get_http_var(&hm->body, "n1", n1, sizeof(n1));
-    mg_get_http_var(&hm->body, "n2", n2, sizeof(n2));
-    
-    /* Send headers */
-    mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n");
-    
-    /* Compute the result and send it back as a JSON object */
-    result = strtod(n1, NULL) + strtod(n2, NULL);
-    mg_printf_http_chunk(nc, "{ \"result\": %lf }", result);
-    mg_send_http_chunk(nc, "", 0);
-}
-
-
-/*
- int parse_json(const char *json_string, int json_string_length,
- struct json_token *tokens_array, int size_of_tokens_array);
-*/
 static void handle_add_node_call(struct mg_connection *nc, struct http_message *hm){
     /*parse from body*/
     uint64_t id;
@@ -46,7 +24,7 @@ static void handle_add_node_call(struct mg_connection *nc, struct http_message *
         mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + 10) + "\r\n").c_str());
         mg_printf(nc, "%s", "Content-Type: application/json\r\n");
         mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
-        mg_printf_http_chunk(nc, "{ \"node_id\": %llu }", id);
+        mg_printf_http_chunk(nc, "{\r\n\"node_id\":%llu\r\n}\r\n", id);
     }
     
     /* Send empty chunk, the end of response */
@@ -54,7 +32,34 @@ static void handle_add_node_call(struct mg_connection *nc, struct http_message *
 }
 
 static void handle_add_edge_call(struct mg_connection *nc, struct http_message *hm){
+    uint64_t node_a_id;
+    uint64_t node_b_id;
+    int i;
+    for(i = 0; i < strlen(hm->body.p); ++i){
+        if(hm->body.p[i] == ',') break;
+    }
+    /*parse from body*/
+    sscanf(hm->body.p, "{\"node_a_id\":%llu", &node_a_id);
+    sscanf(hm->body.p+i+1, "\"node_b_id\":%llu", &node_b_id);
+    cout << node_a_id << " " << node_b_id << endl;
     
+    /*compute return value*/
+    uint64_t res = my_graph.add_edge(node_a_id, node_b_id);
+    cout << "res: " << res << endl;
+    
+    /*send header*/
+    mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(res) + " OK\r\n").c_str());
+    
+    /*send result as JSON*/
+    if(res == 200){
+        mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + 10) + "\r\n").c_str());
+        mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+        mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+        mg_printf_http_chunk(nc, "{\r\n\"node_a_id\":%llu,\r\n\"node_b_id\":%llu\r\n}\r\n", node_a_id, node_b_id);
+    }
+    
+    /* Send empty chunk, the end of response */
+    mg_send_http_chunk(nc, "", 0);
 }
 
 

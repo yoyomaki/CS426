@@ -4,7 +4,7 @@ uint64_t graph::add_node(uint64_t node_id){
     unordered_map<uint64_t, node*>::iterator it = this->nodes.find(node_id);
     if(it == this->nodes.end()){
         node* new_node = new node(node_id);
-        nodes.insert(make_pair(node_id, new_node));
+        nodes[node_id] = new_node;
         return 200;
     }else{
         return 204;
@@ -22,12 +22,12 @@ uint64_t graph::add_edge(uint64_t node_a_id, uint64_t node_b_id){
     }
     unordered_map<uint64_t, node*> a_neighbors = ita->second->neighbors;
     unordered_map<uint64_t, node*> b_neighbors = itb->second->neighbors;
-    unordered_map<uint64_t, node*>::iterator ita_neighbors = a_neighbors.find(node_b_id);
-    if(ita_neighbors != a_neighbors.end()){
+    //unordered_map<uint64_t, node*>::iterator ita_neighbors = a_neighbors.find(node_b_id);
+    if(a_neighbors.find(node_b_id) != a_neighbors.end()){
         return 204;
     }
-    a_neighbors.insert(make_pair(node_b_id,itb->second));
-    b_neighbors.insert(make_pair(node_a_id,ita->second));
+    a_neighbors[node_b_id] = itb->second;
+    b_neighbors[node_a_id] = ita->second;
     return 200;
 }
 
