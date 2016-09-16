@@ -1,8 +1,12 @@
 #include "./graph/graph.h"
 #include "./library/mongoose.h"
+//#include <json.h>
+
+using namespace std;
+
 static const char *s_http_port = "8000";
 static struct mg_serve_http_opts s_http_server_opts;
-
+static graph my_graph;
 
 //  200 and a boolean JSON field in_graph indicating whether the node is in the graph
 //    HTTP/1.1 200 OK
@@ -14,19 +18,50 @@ static struct mg_serve_http_opts s_http_server_opts;
 //    }
 //  return true if node exists, otherwise false
 //  bool get_node(uint64_t node_id);
+//
+//static void handle_sum_call(struct mg_connection *nc, struct http_message *hm) {
+//    char n1[100], n2[100];
+//    double result;
+//    
+//    /* Get form variables */
+//    mg_get_http_var(&hm->body, "n1", n1, sizeof(n1));
+//    mg_get_http_var(&hm->body, "n2", n2, sizeof(n2));
+//    
+//    /* Send headers */
+//    mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n");
+//    
+//    /* Compute the result and send it back as a JSON object */
+//    result = strtod(n1, NULL) + strtod(n2, NULL);
+//    mg_printf_http_chunk(nc, "{ \"result\": %lf }", result);
+//    mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
+//}
 static void handle_get_node_call(struct mg_connection *nc, struct http_message *hm) {
-    char node_id[100];
-    double result;
+    uint64_t node_id;
+    bool result;
+    string sresult;
+    int len;
     
     /* Get form variables */
-    mg_get_http_var(&hm->body, "node_id", node_id, sizeof(node_id));
-    
-    /* Send headers */
-    mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n");
+    sscanf(hm->body.p, "{\"node_id\":%llu", &node_id);
     
     /* Compute the result and send it back as a JSON object */
-//    result = graph.get_node(strtoll(node_id));
-    mg_printf_http_chunk(nc, "{ \"in_graph\": %lf }", result);
+    result = my_graph.get_node(node_id);
+    sresult = result ? "TRUE" : "FALSE";
+    len = sresult.length() + 12;
+    
+    /* Send headers */
+    mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
+    mg_printf(nc, "%s", ("Content-Length: " + to_string(len) + "\r\n").c_str());
+    mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+    mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+
+    cout << len << endl;
+    cout << "o<-<" << endl;
+    
+//    mg_printf_http_chunk(nc, "HTTP/1.1 200 OK \n");
+//    mg_printf_http_chunk(nc, "Content-Length: <%d> \n", len);
+//    mg_printf_http_chunk(nc, "Content-Type: application/json \n");
+    mg_printf_http_chunk(nc, "{ \n \"in_graph\": %s \n} \n", sresult.c_str());
     mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
 }
 
@@ -35,8 +70,8 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
     
     switch (ev) {
         case MG_EV_HTTP_REQUEST:
-            if (mg_vcmp(&hm->uri, "/api/v1/sum") == 0) {
-//                handle_sum_call(nc, hm); /* Handle RESTful call */
+            if (mg_vcmp(&hm->uri, "/api/v1/get_node") == 0) {
+                handle_get_node_call(nc, hm); /* Handle RESTful call */
             } else if (mg_vcmp(&hm->uri, "/printcontent") == 0) {
                 char buf[100] = {0};
                 memcpy(buf, hm->body.p,
