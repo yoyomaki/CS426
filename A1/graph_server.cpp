@@ -15,6 +15,7 @@ static void handle_add_node_call(struct mg_connection *nc, struct http_message *
     sscanf(hm->body.p, "{\"node_id\":%llu", &id);
     /*compute return value*/
     uint64_t res = my_graph.add_node(id);
+    cout << "res: " << res << endl;
     
     /*send header*/
     mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(res) + " OK\r\n").c_str());
@@ -56,6 +57,10 @@ static void handle_add_edge_call(struct mg_connection *nc, struct http_message *
         mg_printf(nc, "%s", "Content-Type: application/json\r\n");
         mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
         mg_printf_http_chunk(nc, "{\r\n\"node_a_id\":%llu,\r\n\"node_b_id\":%llu\r\n}\r\n", node_a_id, node_b_id);
+    }else{
+        mg_printf(nc, "%s", ("Content-Length: " + to_string(0) + "\r\n").c_str());
+        mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+        mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
     }
     
     /* Send empty chunk, the end of response */
