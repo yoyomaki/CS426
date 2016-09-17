@@ -8,6 +8,7 @@
 #include <list>
 #include <string>
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 
@@ -52,8 +53,10 @@ public:
      */
 	pair<bool, bool> get_edge(uint64_t node_a_id, uint64_t node_b_id);
     
-    //return a set of nodes (all neighbors of node_id)
-    //return NULL if the node does not exist.
+    /**
+     Boolean indicates whether the node is in the graph.
+     The returned map returns the neighbors of the node.
+     */
 	pair<bool,unordered_map<uint64_t, node*> > get_neighbors(uint64_t node_id);
     
     /*
