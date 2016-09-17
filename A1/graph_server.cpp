@@ -206,7 +206,9 @@ static void handle_get_neighbors_call(struct mg_connection *nc, struct http_mess
         mg_printf_http_chunk(nc, "{ \n \"node_id\": %llu \n", node_id);
         mg_printf_http_chunk(nc, " \"neighbors\": %s \n}\r\n", sresult.c_str());
     } else {
-        mg_printf(nc, "%s", "HTTP/1.1 400 \r\n");
+        mg_printf(nc, "%s", "HTTP/1.1 400 Bad Request\r\n");
+        mg_printf(nc, "%s", ("Content-Length: " + to_string(0) + "\r\n").c_str());
+        mg_printf(nc, "%s", "Content-Type: application/json\r\n");
         mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
         cout << "node not in graph" << endl;
     }
@@ -383,7 +385,7 @@ int main(int argc, char *argv[]) {
     my_graph.add_node(4);
     my_graph.add_edge(1, 2);
     my_graph.add_edge(1, 3);
-    my_graph.add_edge(2, 4);
+//    my_graph.add_edge(2, 4);
     
     for (;;) {
         mg_mgr_poll(&mgr, 1000);
