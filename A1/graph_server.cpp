@@ -113,6 +113,152 @@ static void handle_remove_edge_call(struct mg_connection *nc, struct http_messag
     mg_send_http_chunk(nc, "", 0);
 }
 
+static void handle_get_node_call(struct mg_connection *nc, struct http_message *hm) {
+    uint64_t node_id;
+    bool result;
+    string sresult;
+    int len;
+    
+    /* Get form variables */
+    sscanf(hm->body.p, "{\"node_id\":%llu", &node_id);
+    
+    /* Compute the result and send it back as a JSON object */
+    result = my_graph.get_node(node_id);
+    sresult = result ? "TRUE" : "FALSE";
+    len = sresult.length() + 12;
+    
+    /* Send headers */
+    mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
+    mg_printf(nc, "%s", ("Content-Length: " + to_string(len) + "\r\n").c_str());
+    mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+    mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+    
+    mg_printf_http_chunk(nc, "{ \n \"in_graph\": %s \n} \n", sresult.c_str());
+    mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
+
+}
+
+static void handle_get_edge_call(struct mg_connection *nc, struct http_message *hm) {
+    uint64_t node_a_id;
+    uint64_t node_b_id;
+    pair<bool, bool> result;
+    string sresult;
+    int len;
+    int i;
+    for (i = 0; i < strlen(hm->body.p); i++) {
+        if (hm->body.p[i] == ',') {
+            break;
+        }
+    }
+    sscanf(hm->body.p, "{\n\r\"node_a_id\":%llu", &node_a_id);
+    sscanf(hm->body.p + i + 1, "\n\r\"node_b_id\":%llu", &node_b_id);
+    
+    /* Compute the result and send it back as a JSON object */
+    result = my_graph.get_edge(node_a_id, node_b_id);
+    
+    // result.second == true if both nodes are in the graph,
+    //               == false if at least one of the vertices does not exist
+    if (result.second) {
+        sresult = result.first ? "TRUE" : "FALSE";
+        cout << sresult << endl;
+        len = sresult.length() + 12;
+        /* Send headers */
+        mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
+        mg_printf(nc, "%s", ("Content-Length: " + to_string(len) + "\r\n").c_str());
+        mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+        mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+        mg_printf_http_chunk(nc, "{ \n \"in_graph\": %s \n} \n", sresult.c_str());
+    } else {
+        mg_printf(nc, "%s", "HTTP/1.1 400 \r\n");
+        mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+        cout << "node not in graph" << endl;
+    }
+    mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
+}
+
+static void handle_get_neighbors_call(struct mg_connection *nc, struct http_message *hm) {
+    uint64_t node_id;
+    pair<bool,unordered_map<uint64_t, node*> > result;
+    string sresult;
+    int len;
+    
+    /* Get form variables */
+    sscanf(hm->body.p, "{\"node_id\":%llu", &node_id);
+    
+    /* Compute the result and send it back as a JSON object */
+    result = my_graph.get_neighbors(node_id);
+    len = result.second.size();
+    unordered_map<uint64_t, node*>::iterator n_it;
+    for (n_it = result.second.begin(); n_it != result.second.end(); ++n_it) {
+        sresult += to_string(n_it->first);
+        if(next(n_it) != result.second.end()){
+            sresult += ", ";
+        }
+    }
+    // result.first indicates if the node is in the graph
+    if (result.first) {
+        /* Send headers */
+        mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
+        mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + len + 10) + "\r\n").c_str());
+        mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+        mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+        
+        mg_printf_http_chunk(nc, "{\r\n\"node_id\":%llu,\r\n", node_id);
+        mg_printf_http_chunk(nc, "\"neighbors\":[%s]\r\n}\r\n", sresult.c_str());
+    } else {
+        mg_printf(nc, "%s", "HTTP/1.1 400 Bad Request\r\n");
+        mg_printf(nc, "%s", ("Content-Length: " + to_string(0) + "\r\n").c_str());
+        mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+        mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+    }
+    mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
+
+}
+
+static void handle_shortest_path_call(struct mg_connection *nc, struct http_message *hm) {
+    uint64_t node_a_id;
+    uint64_t node_b_id;
+    uint64_t path_length;
+    pair<uint64_t, bool> result;
+    
+    int len = 20;
+    int i;
+    for (i = 0; i < strlen(hm->body.p); i++) {
+        if (hm->body.p[i] == ',') {
+            break;
+        }
+    }
+    sscanf(hm->body.p, "{\n\r\"node_a_id\":%llu", &node_a_id);
+    sscanf(hm->body.p + i + 1, "\n\r\"node_b_id\":%llu", &node_b_id);
+    
+    /* Compute the result and send it back as a JSON object */
+    result = my_graph.shortest_path(node_a_id, node_b_id);
+    
+    // result.second == true if both nodes are in the graph,
+    //               == false if at least one of the vertices does not exist
+    if (result.second) {
+        path_length = result.first;
+        // which is -1 in signed int, the case when we return 204
+        if (path_length == 18446744073709551615) {
+            mg_printf(nc, "%s", "HTTP/1.1 204 \r\n");
+            mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+        } else {
+            /* Send headers */
+            mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
+            mg_printf(nc, "%s", ("Content-Length: " + to_string(len) + "\r\n").c_str());
+            mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+            mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+            mg_printf_http_chunk(nc, "{ \n \"distance\": %llu \n} \n", path_length);
+        }
+    } else {
+        mg_printf(nc, "%s", "HTTP/1.1 400 Bad Request\r\n");
+        mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+    }
+    mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
+
+}
+
+
 
 static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
     struct http_message *hm = (struct http_message *) ev_data;
@@ -127,6 +273,14 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
                 handle_remove_node_call(nc, hm);
             }else if(mg_vcmp(&hm->uri, "/api/v1/remove_edge") == 0){
                 handle_remove_edge_call(nc, hm);
+            }else if(mg_vcmp(&hm->uri, "/api/v1/get_node") == 0){
+                handle_get_node_call(nc, hm);
+            }else if(mg_vcmp(&hm->uri, "/api/v1/get_edge") == 0){
+                handle_get_edge_call(nc, hm);
+            }else if(mg_vcmp(&hm->uri, "/api/v1/get_neighbors") == 0){
+                handle_get_neighbors_call(nc, hm);
+            }else if(mg_vcmp(&hm->uri, "/api/v1/shortest_path") == 0){
+                handle_shortest_path_call(nc, hm);
             } else {
                 mg_serve_http(nc, hm, s_http_server_opts); /* Serve static content */
             }
