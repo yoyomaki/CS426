@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <utility>
 #include <queue>
+#include <list>
 #include <string>
 #include <iostream>
 
@@ -53,7 +54,7 @@ public:
     
     //return a set of nodes (all neighbors of node_id)
     //return NULL if the node does not exist.
-	unordered_set<node*> get_neighbors(uint64_t node_id);
+	pair<bool,unordered_map<uint64_t, node*> > get_neighbors(uint64_t node_id);
     
     /*
      int = shortest path length, if returned -1, then there is no path between node a and b.
