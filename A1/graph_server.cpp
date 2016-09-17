@@ -15,7 +15,6 @@ static void handle_add_node_call(struct mg_connection *nc, struct http_message *
     sscanf(hm->body.p, "{\"node_id\":%llu", &id);
     /*compute return value*/
     uint64_t res = my_graph.add_node(id);
-    cout << "res: " << res << endl;
     
     /*send header*/
     mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(res) + " OK\r\n").c_str());
@@ -42,26 +41,73 @@ static void handle_add_edge_call(struct mg_connection *nc, struct http_message *
     /*parse from body*/
     sscanf(hm->body.p, "{\"node_a_id\":%llu", &node_a_id);
     sscanf(hm->body.p+i+1, "\"node_b_id\":%llu", &node_b_id);
-    cout << node_a_id << " " << node_b_id << endl;
     
     /*compute return value*/
     uint64_t res = my_graph.add_edge(node_a_id, node_b_id);
-    cout << "res: " << res << endl;
-    
+
+    string echo = (res == 200) || (res == 204) ? "OK" : "Bad Request";
     /*send header*/
-    mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(res) + " OK\r\n").c_str());
+    mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(res) + " " + echo + "\r\n").c_str());
+    
+    int len = res == 200 ? hm->body.len + 10 : 0;
     
     /*send result as JSON*/
-    if(res == 200){
-        mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + 10) + "\r\n").c_str());
-        mg_printf(nc, "%s", "Content-Type: application/json\r\n");
-        mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
-        mg_printf_http_chunk(nc, "{\r\n\"node_a_id\":%llu,\r\n\"node_b_id\":%llu\r\n}\r\n", node_a_id, node_b_id);
-    }else{
-        mg_printf(nc, "%s", ("Content-Length: " + to_string(0) + "\r\n").c_str());
-        mg_printf(nc, "%s", "Content-Type: application/json\r\n");
-        mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+    mg_printf(nc, "%s", ("Content-Length: " + to_string(len) + "\r\n").c_str());
+    mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+    mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+    if(res == 200) mg_printf_http_chunk(nc, "{\r\n\"node_a_id\":%llu,\r\n\"node_b_id\":%llu\r\n}\r\n", node_a_id, node_b_id);
+    
+    /* Send empty chunk, the end of response */
+    mg_send_http_chunk(nc, "", 0);
+}
+
+static void handle_remove_node_call(struct mg_connection *nc, struct http_message *hm){
+    uint64_t node_id;
+    /*parse from body*/
+    sscanf(hm->body.p, "{\"node_id\":%llu", &node_id);
+    
+    /*compute return value*/
+    uint64_t res = my_graph.remove_node(node_id);
+
+    string echo = res == 200 ? "OK" : "Bad Request";
+    /*send header*/
+    mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(res) + " " + echo + "\r\n").c_str());
+    
+    int len = res == 200 ? hm->body.len + 10 : 0;
+    /*send result as JSON*/
+    mg_printf(nc, "%s", ("Content-Length: " + to_string(len) + "\r\n").c_str());
+    mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+    mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+    if(res == 200) mg_printf_http_chunk(nc, "{\r\n\"node_id\":%llu\r\n}\r\n", node_id);
+    
+    /* Send empty chunk, the end of response */
+    mg_send_http_chunk(nc, "", 0);
+}
+
+static void handle_remove_edge_call(struct mg_connection *nc, struct http_message *hm){
+    uint64_t node_a_id;
+    uint64_t node_b_id;
+    int i;
+    for(i = 0; i < strlen(hm->body.p); ++i){
+        if(hm->body.p[i] == ',') break;
     }
+    /*parse from body*/
+    sscanf(hm->body.p, "{\"node_a_id\":%llu", &node_a_id);
+    sscanf(hm->body.p+i+1, "\"node_b_id\":%llu", &node_b_id);
+    
+    /*compute return value*/
+    uint64_t res = my_graph.remove_edge(node_a_id, node_b_id);
+    
+    string echo = res == 200 ? "OK" : "Bad Request";
+    /*send header*/
+    mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(res) + " " + echo + "\r\n").c_str());
+    
+    int len = res == 200 ? hm->body.len + 10 : 0;
+    /*send result as JSON*/
+    mg_printf(nc, "%s", ("Content-Length: " + to_string(len) + "\r\n").c_str());
+    mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+    mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+    if(res == 200) mg_printf_http_chunk(nc, "{\r\n\"node_a_id\":%llu,\r\n\"node_b_id\":%llu\r\n}\r\n", node_a_id, node_b_id);
     
     /* Send empty chunk, the end of response */
     mg_send_http_chunk(nc, "", 0);
@@ -77,6 +123,10 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
                 handle_add_node_call(nc, hm);
             }else if(mg_vcmp(&hm->uri, "/api/v1/add_edge") == 0){
                 handle_add_edge_call(nc, hm);
+            }else if(mg_vcmp(&hm->uri, "/api/v1/remove_node") == 0){
+                handle_remove_node_call(nc, hm);
+            }else if(mg_vcmp(&hm->uri, "/api/v1/remove_edge") == 0){
+                handle_remove_edge_call(nc, hm);
             } else {
                 mg_serve_http(nc, hm, s_http_server_opts); /* Serve static content */
             }
