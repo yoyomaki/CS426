@@ -238,13 +238,14 @@ static void handle_shortest_path_call(struct mg_connection *nc, struct http_mess
     //               == false if at least one of the vertices does not exist
     if (result.second) {
         path_length = result.first;
-        if (path_length == 18446744073709551615) {
+        if (path_length == (uint64_t) -1) {
             mg_printf(nc, "%s", "HTTP/1.1 204 \r\n");
             mg_printf(nc, "%s", ("Content-Length: " + to_string(0) + "\r\n").c_str());
             mg_printf(nc, "%s", "Content-Type: application/json\r\n");
             mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
         } else {
             /* Send headers */
+            cout << "WTF2\n";
             mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
             mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + 50) + "\r\n").c_str());
             mg_printf(nc, "%s", "Content-Type: application/json\r\n");
@@ -254,6 +255,7 @@ static void handle_shortest_path_call(struct mg_connection *nc, struct http_mess
             mg_printf_http_chunk(nc, "\"distance\":%llu\r\n}\r\n", path_length);
         }
     } else {
+        cout << "WTF2\n";
         mg_printf(nc, "%s", "HTTP/1.1 400 Bad Request\r\n");
         mg_printf(nc, "%s", ("Content-Length: " + to_string(0) + "\r\n").c_str());
         mg_printf(nc, "%s", "Content-Type: application/json\r\n");
