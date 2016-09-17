@@ -238,24 +238,28 @@ static void handle_shortest_path_call(struct mg_connection *nc, struct http_mess
     //               == false if at least one of the vertices does not exist
     if (result.second) {
         path_length = result.first;
-        // which is -1 in signed int, the case when we return 204
         if (path_length == 18446744073709551615) {
             mg_printf(nc, "%s", "HTTP/1.1 204 \r\n");
+            mg_printf(nc, "%s", ("Content-Length: " + to_string(0) + "\r\n").c_str());
+            mg_printf(nc, "%s", "Content-Type: application/json\r\n");
             mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
         } else {
             /* Send headers */
             mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
-            mg_printf(nc, "%s", ("Content-Length: " + to_string(len) + "\r\n").c_str());
+            mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + 50) + "\r\n").c_str());
             mg_printf(nc, "%s", "Content-Type: application/json\r\n");
             mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
-            mg_printf_http_chunk(nc, "{ \n \"distance\": %llu \n} \n", path_length);
+            mg_printf_http_chunk(nc, "{\r\n\"node_a_id\":%llu,\r\n", node_a_id);
+            mg_printf_http_chunk(nc, "\"node_b_id\":%llu,\r\n", node_b_id);
+            mg_printf_http_chunk(nc, "\"distance\":%llu\r\n}\r\n", path_length);
         }
     } else {
         mg_printf(nc, "%s", "HTTP/1.1 400 Bad Request\r\n");
+        mg_printf(nc, "%s", ("Content-Length: " + to_string(0) + "\r\n").c_str());
+        mg_printf(nc, "%s", "Content-Type: application/json\r\n");
         mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
     }
     mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
-
 }
 
 
