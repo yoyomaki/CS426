@@ -88,20 +88,24 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
     bool both_node_exist = true;
     uint64_t path = -1;
     uint64_t s;
-    uint64_t temp_path = 0;
+//    uint64_t temp_path = 0;
     if (!get_node(node_a_id) || !get_node(node_b_id)) {
         both_node_exist = false;
     }
-    // bool visited[nodes.size()];
-    bool *visited = new bool[nodes.size()];
-    for (int i = 0; i < nodes.size(); i++) {
-        visited[i] = false;
+    // initializing
+    unordered_map<uint64_t, node*>::iterator node_i;
+    unordered_map<uint64_t, pair<bool, int> > imp;
+    for(node_i = nodes.begin(); node_i != nodes.end(); ++node_i) {
+        imp[node_i->first] = make_pair(false, -1);
     }
+//    cout << imp.size() << endl;
+    
     // Create a queue for BFS
     list<uint64_t> queue;
         
     // Mark the current node as visited and enqueue it
-    visited[node_a_id] = true;
+
+    imp[node_a_id] = make_pair(true, 0);
     queue.push_back(node_a_id);
         
     // 'i' will be used to get all adjacent vertices of a vertex
@@ -109,16 +113,13 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
         
     while(!queue.empty()) {
         s = queue.front();
-//            if (s == node_b_id) {
-//                path = temp_path;
-//                break;
-//            }
             // if queue contians node_b_id
         if (std::find(queue.begin(), queue.end(), node_b_id) != queue.end()) {
-            path  = temp_path;
+
+            path = imp[node_b_id].second;
             break;
         }
-        temp_path++;
+
         queue.pop_front();
         
         // Get all adjacent vertices of the dequeued vertex s.
@@ -126,10 +127,11 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
         // and enqueue it
         unordered_map<uint64_t, node*> s_neighbors = nodes[s]->neighbors;
         for(i = s_neighbors.begin(); i != s_neighbors.end(); ++i) {
-            if(!visited[i->first]) {
-                visited[i->first] = true;
+            if (!imp[i->first].first) {
+                imp[i->first].first = true;
+                imp[i->first].second = imp[s].second + 1;
                 queue.push_back(i->first);
-            }
+            }           
         }
     }
     return make_pair(path, both_node_exist);

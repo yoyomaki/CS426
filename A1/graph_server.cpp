@@ -193,30 +193,30 @@ static void handle_get_neighbors_call(struct mg_connection *nc, struct http_mess
     len = result.second.size();
     unordered_map<uint64_t, node*>::iterator n_it;
     for (n_it = result.second.begin(); n_it != result.second.end(); ++n_it) {
-        sresult += to_string(n_it->first) + " ";
+        sresult += to_string(n_it->first);
+        if(next(n_it) != result.second.end()){
+            sresult += ", ";
+        }
     }
     // result.first indicates if the node is in the graph
     if (result.first) {
         /* Send headers */
         mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
-        mg_printf(nc, "%s", ("Content-Length: " + to_string(len) + "\r\n").c_str());
+        mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + len + 10) + "\r\n").c_str());
         mg_printf(nc, "%s", "Content-Type: application/json\r\n");
         mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
         
-        mg_printf_http_chunk(nc, "{ \n \"node_id\": %llu \n", node_id);
-        mg_printf_http_chunk(nc, " \"neighbors\": %s \n}\r\n", sresult.c_str());
+        mg_printf_http_chunk(nc, "{\r\n\"node_id\":%llu,\r\n", node_id);
+        mg_printf_http_chunk(nc, "\"neighbors\":[%s]\r\n}\r\n", sresult.c_str());
     } else {
         mg_printf(nc, "%s", "HTTP/1.1 400 Bad Request\r\n");
         mg_printf(nc, "%s", ("Content-Length: " + to_string(0) + "\r\n").c_str());
         mg_printf(nc, "%s", "Content-Type: application/json\r\n");
         mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
-        cout << "node not in graph" << endl;
     }
     mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
     
-    cout << "o<-<" << endl;
 }
-
 
 //u64 and a field distance containing the shortest path between the two nodes or
 //204 if there is no path
@@ -385,7 +385,8 @@ int main(int argc, char *argv[]) {
     my_graph.add_node(4);
     my_graph.add_edge(1, 2);
     my_graph.add_edge(1, 3);
-//    my_graph.add_edge(2, 4);
+    my_graph.add_edge(2, 4);
+    my_graph.add_edge(3, 4);
     
     for (;;) {
         mg_mgr_poll(&mgr, 1000);

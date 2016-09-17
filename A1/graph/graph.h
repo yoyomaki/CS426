@@ -15,7 +15,7 @@ using namespace std;
 struct node{
 	uint64_t id;
 	unordered_map<uint64_t, node*> neighbors;
-	node(uint64_t i){this->id=i;}
+	node(uint64_t i){id=i;}
 //    bool operator==(node *another) const{
 //        return id == another->id;
 //    }
