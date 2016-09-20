@@ -4,7 +4,7 @@
 
 using namespace std;
 
-static const char *s_http_port = "8000";
+static char *s_http_port = "8000";
 static struct mg_serve_http_opts s_http_server_opts;
 
 static graph my_graph;
@@ -304,19 +304,9 @@ int main(int argc, char *argv[]) {
     int i;
     char *cp;
     const char *err_str;
-#ifdef MG_ENABLE_SSL
-    const char *ssl_cert = NULL;
-#endif
-    
     mg_mgr_init(&mgr, NULL);
     
-    /* Use current binary directory as document root */
-    if (argc > 0 && ((cp = strrchr(argv[0], DIRSEP)) != NULL)) {
-        *cp = '\0';
-        s_http_server_opts.document_root = argv[0];
-    }
-    
-    /* Process command line options to customize HTTP server */
+    //Process command line options to customize HTTP server
     if(argc >= 2){
         s_http_port = argv[1];
     }
@@ -324,11 +314,7 @@ int main(int argc, char *argv[]) {
     /* Set HTTP server options */
     memset(&bind_opts, 0, sizeof(bind_opts));
     bind_opts.error_string = &err_str;
-#ifdef MG_ENABLE_SSL
-    if (ssl_cert != NULL) {
-        bind_opts.ssl_cert = ssl_cert;
-    }
-#endif
+
     nc = mg_bind_opt(&mgr, s_http_port, ev_handler, bind_opts);
     if (nc == NULL) {
         fprintf(stderr, "Error starting server on port %s: %s\n", s_http_port,

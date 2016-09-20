@@ -88,7 +88,6 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
     bool both_node_exist = true;
     uint64_t path = -1;
     uint64_t s;
-    //    uint64_t temp_path = 0;
     if (!get_node(node_a_id) || !get_node(node_b_id)) {
         both_node_exist = false;
     }
@@ -98,7 +97,6 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
     for(node_i = nodes.begin(); node_i != nodes.end(); ++node_i) {
         imp[node_i->first] = make_pair(false, -1);
     }
-    //    cout << imp.size() << endl;
     
     // Create a queue for BFS
     list<uint64_t> queue;
@@ -115,13 +113,10 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
         s = queue.front();
         // if queue contians node_b_id
         if (std::find(queue.begin(), queue.end(), node_b_id) != queue.end()) {
-            
             path = imp[node_b_id].second;
             break;
         }
-        
         queue.pop_front();
-        
         // Get all adjacent vertices of the dequeued vertex s.
         // If a adjacent has not been visited, then mark it visited
         // and enqueue it
