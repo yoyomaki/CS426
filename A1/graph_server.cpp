@@ -159,7 +159,6 @@ static void handle_get_edge_call(struct mg_connection *nc, struct http_message *
     //               == false if at least one of the vertices does not exist
     if (result.second) {
         sresult = result.first ? "true" : "false";
-        cout << sresult << endl;
         len = sresult.length() + 20 + hm->body.len;
         /* Send headers */
         mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
@@ -174,7 +173,6 @@ static void handle_get_edge_call(struct mg_connection *nc, struct http_message *
         mg_printf(nc, "%s", ("Content-Length: " + to_string(0) + "\r\n").c_str());
         mg_printf(nc, "%s", "Content-Type: application/json\r\n");
         mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
-        cout << "node not in graph" << endl;
     }
     mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
 }
