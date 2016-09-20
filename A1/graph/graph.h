@@ -16,14 +16,6 @@ struct node{
 	uint64_t id;
     unordered_map<uint64_t, node*> neighbors;
 	node(uint64_t i){id=i;}
-    /*
-    bool operator==(node *another) const{
-        return id == another->id;
-    }
-    bool operator==(uint64_t another_id) const{
-        return id == another_id;
-    }
-     */
 };
 
 class graph{
