@@ -159,6 +159,7 @@ static void handle_get_edge_call(struct mg_connection *nc, struct http_message *
     //               == false if at least one of the vertices does not exist
     if (result.second) {
         sresult = result.first ? "true" : "false";
+        cout << sresult << endl;
         len = sresult.length() + 20 + hm->body.len;
         /* Send headers */
         mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
@@ -173,6 +174,7 @@ static void handle_get_edge_call(struct mg_connection *nc, struct http_message *
         mg_printf(nc, "%s", ("Content-Length: " + to_string(0) + "\r\n").c_str());
         mg_printf(nc, "%s", "Content-Type: application/json\r\n");
         mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+        cout << "node not in graph" << endl;
     }
     mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
 }
@@ -263,6 +265,10 @@ static void handle_shortest_path_call(struct mg_connection *nc, struct http_mess
     mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
 }
 
+static void handle_checkpoint_call(struct mg_connection *nc, struct http_message *hm) {
+    // 200 on Success
+    // 507 if checkpoint is full
+}
 
 
 static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
@@ -286,6 +292,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
                 handle_get_neighbors_call(nc, hm);
             }else if(mg_vcmp(&hm->uri, "/api/v1/shortest_path") == 0){
                 handle_shortest_path_call(nc, hm);
+            }else if(mg_vcmp(&hm->uri, "/api/v1/shortest_path") == 0){
             } else {
                 mg_serve_http(nc, hm, s_http_server_opts); /* Serve static content */
             }
