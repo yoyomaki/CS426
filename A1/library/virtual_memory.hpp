@@ -36,7 +36,7 @@ struct super_block{
     // return true if cur_block->num_entry = XXXX && cur_block = end_block. OW false
     bool check_log_full(void);
     void write_add_node(uint64_t id, int fd);
-
+    void write_remove_node(uint64_t id, int fd);
 struct log_block{
     uint32_t generation;
     uint32_t num_entry;
