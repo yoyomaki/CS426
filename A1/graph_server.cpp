@@ -31,15 +31,11 @@ static void handle_add_node_call(struct mg_connection *nc, struct http_message *
     if(vm_on){
         //check log is full?
         if(my_super_block.check_log_full()){
-            mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(507) + " XXXX\r\n").c_str());
-            mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + 10) + "\r\n").c_str());
-            mg_printf(nc, "%s", "Content-Type: application/json\r\n");
-            mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
-            /* Send empty chunk, the end of response */
+            mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(507) + " Insufficient Storage\r\n").c_str());
             mg_send_http_chunk(nc, "", 0);
         }else{
             uint64_t res = my_graph.add_node(id,fd);
-            mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(res) + " XXXX\r\n").c_str());
+            mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(res) + " OK\r\n").c_str());
             if(res == 200){
                 my_super_block.write_add_node(id, fd);
                 mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + 10) + "\r\n").c_str());
