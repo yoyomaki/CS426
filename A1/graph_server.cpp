@@ -263,6 +263,11 @@ static void handle_shortest_path_call(struct mg_connection *nc, struct http_mess
     mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
 }
 
+static void handle_checkpoint_call(struct mg_connection *nc, struct http_message *hm) {
+        // 200 on Success
+        // 507 if checkpoint is full
+    
+    }
 
 
 static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
