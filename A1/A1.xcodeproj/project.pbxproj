@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		3A4696AF1DBBF08C00A86F25 /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
+		3A4696B01DBBF08C00A86F25 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		3A4696B11DBBF0C000A86F25 /* virtual_memory.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = virtual_memory.hpp; sourceTree = "<group>"; };
+		3A4696B21DBBF0C000A86F25 /* virtual_memory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = virtual_memory.cpp; sourceTree = "<group>"; };
 		BE29C5101D88999E002E95C5 /* graph.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = graph.cpp; sourceTree = "<group>"; };
 		BE29C5111D88999E002E95C5 /* graph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = graph.h; sourceTree = "<group>"; };
 		BE29C5121D88999E002E95C5 /* graph_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = graph_server.cpp; sourceTree = "<group>"; };
@@ -18,6 +22,8 @@
 		BE29C5041D889987002E95C5 = {
 			isa = PBXGroup;
 			children = (
+				3A4696AF1DBBF08C00A86F25 /* README.txt */,
+				3A4696B01DBBF08C00A86F25 /* Makefile */,
 				BE29C50F1D88999E002E95C5 /* graph */,
 				BE29C5121D88999E002E95C5 /* graph_server.cpp */,
 				BE29C5131D88999E002E95C5 /* library */,
@@ -36,6 +42,8 @@
 		BE29C5131D88999E002E95C5 /* library */ = {
 			isa = PBXGroup;
 			children = (
+				3A4696B11DBBF0C000A86F25 /* virtual_memory.hpp */,
+				3A4696B21DBBF0C000A86F25 /* virtual_memory.cpp */,
 				BE29C5141D88999E002E95C5 /* mongoose.c */,
 				BE29C5151D88999E002E95C5 /* mongoose.h */,
 			);
