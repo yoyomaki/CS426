@@ -42,6 +42,7 @@ struct super_block{
     void write_remove_edge(uint64_t node_a_id, uint64_t node_b_id, int fd);
 }
 
+// one block is one page --> 4KB which is 4096 bytes
 struct log_block{
     uint32_t generation;
     uint32_t num_entry;
@@ -71,7 +72,8 @@ struct log_entry{
 struct check_point{
     uint64_t size;  // number of graph_data, 8GB first line
 };
-    
+
+// 8 + 8 = 16 bytes
 struct graph_data{
     uint64_t node_a;
     uint64_t node_b;

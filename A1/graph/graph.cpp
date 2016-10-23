@@ -136,45 +136,58 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
 void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_block, int fd){
     int check_point_size = my_check_point.size;
     long offset = 2048000000 + sizeof(check_point);
-    //read from check point
-    for(int i = 0; i < check_point_size; ++i){
-        graph_data* edge = mmap(NULL, sizeof(graph_data), PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + i * sizeof(graph_data));
-        node* node_a, node_b;
-        if(edge->node_a == edge->node_b){
-            if(nodes.find(node_a) == nodes.end()){
-                node_a = new node(egde->node_a);
-                nodes[egde->node_a] = node_a;
+    // read from check point
+    // everytime it will read a page or multiple pages --> 4096*x
+    // one graph_data is 16 bytes
+    int num_pages = check_point_size * 16 / 4096 + 1;
+    int index = 0;
+    for (int i = 0; i < num_pages; i++) {
+        graph_data* page = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + i * 4096);
+        for (int j = 0; j < 256; j++) {
+            if (index == check_point_size) {
+                break;
             }
-        }else{
-            if(nodes.find(node_a) == nodes.end()){
-                node_a = new node(egde->node_a);
-                nodes[egde->node_a] = node_a;
-            }else{
-                node_a = nodes[edge->node_a];
+            index++;
+            graph_data* edge = page + j * sizeof(graph_data);
+            node* node_a, node_b;
+            // add node
+            if (edge->node_a == edge->node_b) {
+                if (nodes.find(node_a) == nodes.end()) {
+                    node_a = new node(egde->node_a);
+                    nodes[egde->node_a] = node_a;
+                }
+            // add edge
+            } else {
+                if (nodes.find(node_a) == nodes.end()) {
+                    node_a = new node(egde->node_a);
+                    nodes[egde->node_a] = node_a;
+                } else {
+                    node_a = nodes[edge->node_a];
+                }
+                if (nodes.find(node_b) == nodes.end()) {
+                    node_b = new node(egde->node_b);
+                } else {
+                    node_b = nodes[edge->node_b];
+                }
+                node_a->neighbors[edge->node_b] = node_b;
+                node_b->neighbors[edge->node_a] = node_a;
             }
-            if(nodes.find(node_b) == nodes.end()){
-                node_b = new node(egde->node_b);
-            }else{
-                node_b = nodes[edge->node_b];
-            }
-            node_a->neighbors[edge->node_b] = node_b;
-            node_b->neighbors[edge->node_a] = node_a;
         }
     }
-    //read from log
-    for(int i = 1; i <= my_super_block.cur_block; ++i){
-        log_block* log_page = mmap(NULL, sizeof(log_block), PROT_READ | PROT_WRITE, MAP_SHARED, fd, i * 4096);
-        if(log_page->generation != my_super_block.cur_generation) break;
-        for(int j = 0; j < log_page->num_entry; ++j){
-            long log_entry_offset = i * 4096 + sizeof(log_block);
-            log_entry* single_log = mmap(NULL, sizeof(log_entry), PROT_READ | PROT_WRITE, MAP_SHARED, fd, log_entry_offset + j * sizeof(log_entry));
-            if(single_log->opcode == 0){
+
+    // read from log
+    for (int i = 1; i <= my_super_block.cur_block; i++) {
+        log_block* log_page = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, i * 4096);
+        if (log_page->generation != my_super_block.cur_generation) break;
+        for (int j = 0; j < log_page->num_entry; j++) {
+            log_entry* single_log = log_page + j * sizeof(log_entry);
+            if (single_log->opcode == 0) {
                 this->add_node(single_log->node_a);
-            }else if(single_log->opcode == 1){
+            } else if (single_log->opcode == 1) {
                 this->add_edge(single_log->node_a, single_log->node_b);
-            }else if(single_log->opcode == 2){
+            } else if (single_log->opcode == 2) {
                 this->remove_node(single_log->node_a);
-            }else{
+            } else {
                 this->remove_edge(single_log->node_a, single_log->node_b);
             }
         }

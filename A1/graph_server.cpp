@@ -11,6 +11,7 @@ static bool flag = false;
 static string devfile = "";
 static bool vm_on = false;
 static int fd = -1;
+static int log_page_num = 0;
 static graph my_graph;
 static super_block my_super_block;
 static check_point my_checkpoint;
@@ -42,6 +43,7 @@ static void handle_add_node_call(struct mg_connection *nc, struct http_message *
             mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(res) + " XXXX\r\n").c_str());
             if(res == 200){
                 my_super_block.write_add_node(id, fd);
+                
                 mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + 10) + "\r\n").c_str());
                 mg_printf(nc, "%s", "Content-Type: application/json\r\n");
                 mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
@@ -487,8 +489,9 @@ int main(int argc, char *argv[]) {
         vm_on = true;
     }
     if(vm_on){
-        fd = open(devfileXXXX);
+        fd = open("/dev/sdb", O_RDWR | O_DIRECT);
         if(flag){
+            // format
             
         }else{
             my_super_block = read_super_block_from_vm(fd);

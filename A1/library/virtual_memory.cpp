@@ -9,13 +9,13 @@
 
 bool super_block::check_log_full(void){
     log_block *cur_log_page = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, cur_block * 4096);
-    return cur_block == end_block && cur_log_page->num_entry == 22222;
+    return cur_block == end_block && cur_log_page->num_entry == 204;
 }
 
 // mmap(NULL, BLOCK_SIZE_BYTE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset)
 void super_block::write_add_node(uint64_t id, int fd){
     log_block *cur_log_page = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, size(super_block) + (cur_block - 1) * 4096);
-    if(cur_log_page->num_entry == 22222){
+    if(cur_log_page->num_entry == 204){
         cur_block += 1;
         log_block *cur_log_page = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, size(super_block) + (cur_block - 1) * 4096);
         cur_log_page->num_entry = 0;
@@ -37,7 +37,7 @@ void super_block::write_add_node(uint64_t id, int fd){
 
 void super_block::write_remove_node(uint64_t id, int fd){
     log_block *cur_log_page = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, size(super_block) + (cur_block - 1) * 4096);
-    if(cur_log_page->num_entry == 22222){
+    if(cur_log_page->num_entry == 204){
         cur_block += 1;
         log_block *cur_log_page = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, size(super_block) + (cur_block - 1) * 4096);
         cur_log_page->num_entry = 0;
@@ -59,7 +59,7 @@ void super_block::write_remove_node(uint64_t id, int fd){
 
 void super_block::write_add_edge(uint64_t node_a_id, uint64_t node_b_id, int fd){
     log_block *cur_log_page = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, size(super_block) + (cur_block - 1) * 4096);
-    if (cur_log_page->num_entry == 22222) {
+    if (cur_log_page->num_entry == 204) {
         cur_block += 1;
         log_block *cur_log_page = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, size(super_block) + (cur_block - 1) * 4096);
         cur_log_page->num_entry = 0;
@@ -81,7 +81,7 @@ void super_block::write_add_edge(uint64_t node_a_id, uint64_t node_b_id, int fd)
 
 void super_block::write_remove_edge(uint64_t node_a_id, uint64_t node_b_id, int fd){
     log_block *cur_log_page = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, size(super_block) + (cur_block - 1) * 4096);
-    if (cur_log_page->num_entry == 22222) {
+    if (cur_log_page->num_entry == 204) {
         cur_block += 1;
         log_block *cur_log_page = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, size(super_block) + (cur_block - 1) * 4096);
         cur_log_page->num_entry = 0;
