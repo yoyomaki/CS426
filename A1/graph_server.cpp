@@ -320,6 +320,16 @@ static void handle_shortest_path_call(struct mg_connection *nc, struct http_mess
 static void handle_checkpoint_call(struct mg_connection *nc, struct http_message *hm) {
     // 200 on Success
     // 507 if checkpoint is full
+    // write graph to check point 8GB space
+    my_super_block.cur_generation += 1;
+    int res = my_graph.write_graph_to_vm(check_point& my_checkpoint, int fd);
+    if(res == 200){
+        mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
+        mg_send_http_chunk(nc, "", 0);
+    }else{
+        mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(507) + " Insufficient Storage\r\n").c_str());
+        mg_send_http_chunk(nc, "", 0);
+    }
 }
 
 
@@ -408,7 +418,9 @@ int main(int argc, char *argv[]) {
         if(flag){
         
         }else{
-        
+            my_super_block = read_super_block_from_vm(fd);
+            my_checkpoint = read_checkpoint_from_vm(fd);
+            my_graph.set_graph_from_vm(my_super_block, my_checkpoint, fd);
         }
     }
     

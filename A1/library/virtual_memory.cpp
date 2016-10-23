@@ -13,10 +13,10 @@ bool super_block::check_log_full(void){
 }
 
 void super_block::write_add_node(uint64_t id, int fd){
-    log_block *cur_log_page = mmap(NULL, 4096, fd, size(super_block) + (cur_block - 1) * 4096);
+    log_block *cur_log_page = mmap(NULL, 4096, fd, cur_block * 4096);
     if(cur_log_page->num_entry == 22222){
         cur_block += 1;
-        log_block *cur_log_page = mmap(NULL, 4096, fd, size(super_block) + (cur_block - 1) * 4096);
+        log_block *cur_log_page = mmap(NULL, 4096, fd, cur_block * 4096);
         cur_log_page->num_entry = 0;
         cur_log_page->generation = cur_generation;
         cur_log_page->check_sum = 22222;
@@ -35,10 +35,10 @@ void super_block::write_add_node(uint64_t id, int fd){
 }
 
 void super_block::write_remove_node(uint64_t id, int fd){
-    log_block *cur_log_page = mmap(NULL, 4096, fd, size(super_block) + (cur_block - 1) * 4096);
+    log_block *cur_log_page = mmap(NULL, 4096, fd, cur_block * 4096);
     if(cur_log_page->num_entry == 22222){
         cur_block += 1;
-        log_block *cur_log_page = mmap(NULL, 4096, fd, size(super_block) + (cur_block - 1) * 4096);
+        log_block *cur_log_page = mmap(NULL, 4096, fd, cur_block * 4096);
         cur_log_page->num_entry = 0;
         cur_log_page->generation = cur_generation;
         cur_log_page->check_sum = 22222;
@@ -56,6 +56,22 @@ void super_block::write_remove_node(uint64_t id, int fd){
     }
 }
 
+super_block read_super_block_from_vm(int fd){
+    super_block my_super_block;
+    super_block* super_block_in_vm = mmap(NULL, 4096, fd, 0);
+    my_super_block.cur_generation = super_block_in_vm->cur_generation;
+    my_super_block.check_sum = super_block_in_vm->check_sum;
+    my_super_block.cur_block = super_block_in_vm->cur_block;
+    my_super_block.end_block = super_block_in_vm->end_block;
+    return my_super_block;
+}
+
+check_point read_checkpoint_from_vm(int fd){
+    check_point my_checkpoint;
+    check_point* checkpoint_in_vm = mmap(NULL, sizeof(check_point), fd, 2048000000);
+    my_checkpoint.size = checkpoint_in_vm->size;
+    return my_checkpoint;
+}
 
 
 

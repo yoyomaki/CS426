@@ -9,7 +9,7 @@
 #include <string>
 #include <iostream>
 #include <algorithm>
-
+#include "../library/virtual_memory.hpp"
 using namespace std;
 
 struct node{
@@ -21,6 +21,7 @@ struct node{
 class graph{
 private:
 	unordered_map<uint64_t, node*> nodes;
+    void graph::generate_edge_pairs(unordered_set<pair<uint64_t, uint64_t>>& unique_pairs);
 public:
     //return 200 on success, 204 if the node already exists
 	uint64_t add_node(uint64_t node_id);
@@ -57,4 +58,8 @@ public:
                false if any of them doesn't exist in the graph.
     */
 	pair<uint64_t, bool> shortest_path(uint64_t node_a_id, uint64_t node_b_id);
+    
+    void set_graph_from_vm(check_point my_checkpoint, super_block my_super_block, int fd);
+    
+    int write_graph_to_vm(check_point& my_checkpoint, int fd);
 };

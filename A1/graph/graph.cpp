@@ -131,3 +131,84 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
     }
     return make_pair(path, both_node_exist);
 }
+
+void graph::set_graph_from_vm(check_point my_checkpoint, super_block my_super_block, int fd){
+    int check_point_size = my_check_point.size;
+    long offset = 2048000000 + sizeof(check_point);
+    //read from check point
+    for(int i = 0; i < check_point_size; ++i){
+        graph_data* edge = mmap(NULL, sizeof(graph_data), fd, offset + i * sizeof(graph_data));
+        node* node_a, node_b;
+        if(edge->node_a == edge->node_b){
+            if(nodes.find(node_a) == nodes.end()){
+                node_a = new node(egde->node_a);
+                nodes[egde->node_a] = node_a;
+            }
+        }else{
+            if(nodes.find(node_a) == nodes.end()){
+                node_a = new node(egde->node_a);
+                nodes[egde->node_a] = node_a;
+            }else{
+                node_a = nodes[edge->node_a];
+            }
+            if(nodes.find(node_b) == nodes.end()){
+                node_b = new node(egde->node_b);
+            }else{
+                node_b = nodes[edge->node_b];
+            }
+            node_a->neighbors[edge->node_b] = node_b;
+            node_b->neighbors[edge->node_a] = node_a;
+        }
+    }
+    //read from log
+    for(int i = 1; i <= my_super_block.cur_block; ++i){
+        log_block* log_page = mmap(NULL, sizeof(log_block), fd, i * 4096);
+        if(log_page->generation != my_super_block.cur_generation) break;
+        for(int j = 0; j < log_page->num_entry; ++j){
+            long log_entry_offset = i * 4096 + sizeof(log_block);
+            log_entry* single_log = mmap(NULL, sizeof(log_entry), fd, log_entry_offset + j * sizeof(log_entry));
+            if(single_log->opcode == 0){
+                this->add_node(single_log->node_a);
+            }else if(single_log->opcode == 1){
+                this->add_edge(single_log->node_a, single_log->node_b);
+            }else if(single_log->opcode == 2){
+                this->remove_node(single_log->node_a);
+            }else{
+                this->remove_edge(single_log->node_a, single_log->node_b);
+            }
+        }
+    }
+}
+
+void graph::generate_edge_pairs(unordered_set<pair<uint64_t, uint64_t>>& unique_pairs){
+    for(auto& a : nodes){
+        if(a->neighbors.size() == 0){
+            unique_pairs.insert({a->id, a->id});
+        }else{
+            for(auto& b : a->neighbors){
+                if(unique_pairs.find({b->id, a->id}) == unique_pairs.end()){
+                    unique_pairs.insert({a->id, b->id});
+                }
+            }
+        }
+    }
+}
+
+int graph::write_graph_to_vm(check_point& my_checkpoint, int fd){
+    unordered_set<pair<uint64_t, uint64_t>> edge_pairs;
+    this->generate_edge_pairs(edge_pairs);
+    long offset = 2048000000 + sizeof(check_point);
+    int i = 0;
+    for(auto& edge : edge_pairs){
+        graph_data* single_edge = mmap(NULL, sizeof(graph_data), fd, offset + i * sizeof(graph_data));
+        if(single_edge == NULL){
+            my_checkpoint.size = i;
+            return 507;
+        }
+        single_edge->node_a = edge.first;
+        single_edge->node_b = edge.second;
+        i += 1;
+    }
+    my_checkpoint.size = edge_pairs.size();
+    return 200;
+}
