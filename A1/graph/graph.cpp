@@ -138,7 +138,7 @@ void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_
     long offset = 2048000000 + sizeof(check_point);
     //read from check point
     for(int i = 0; i < check_point_size; ++i){
-        graph_data* edge = mmap(NULL, sizeof(graph_data), fd, offset + i * sizeof(graph_data));
+        graph_data* edge = mmap(NULL, sizeof(graph_data), PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + i * sizeof(graph_data));
         node* node_a, node_b;
         if(edge->node_a == edge->node_b){
             if(nodes.find(node_a) == nodes.end()){
@@ -163,11 +163,11 @@ void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_
     }
     //read from log
     for(int i = 1; i <= my_super_block.cur_block; ++i){
-        log_block* log_page = mmap(NULL, sizeof(log_block), fd, i * 4096);
+        log_block* log_page = mmap(NULL, sizeof(log_block), PROT_READ | PROT_WRITE, MAP_SHARED, fd, i * 4096);
         if(log_page->generation != my_super_block.cur_generation) break;
         for(int j = 0; j < log_page->num_entry; ++j){
             long log_entry_offset = i * 4096 + sizeof(log_block);
-            log_entry* single_log = mmap(NULL, sizeof(log_entry), fd, log_entry_offset + j * sizeof(log_entry));
+            log_entry* single_log = mmap(NULL, sizeof(log_entry), PROT_READ | PROT_WRITE, MAP_SHARED, fd, log_entry_offset + j * sizeof(log_entry));
             if(single_log->opcode == 0){
                 this->add_node(single_log->node_a);
             }else if(single_log->opcode == 1){
@@ -201,7 +201,7 @@ int graph::write_graph_to_vm(check_point& my_checkpoint, int fd){
     long offset = 2048000000 + sizeof(check_point);
     int i = 0;
     for(auto& edge : edge_pairs){
-        graph_data* single_edge = mmap(NULL, sizeof(graph_data), fd, offset + i * sizeof(graph_data));
+        graph_data* single_edge = mmap(NULL, sizeof(graph_data), PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + i * sizeof(graph_data));
         if(single_edge == NULL){
             my_checkpoint.size = i;
             return 507;
