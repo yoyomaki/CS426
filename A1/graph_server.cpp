@@ -1,18 +1,59 @@
 #include "./graph/graph.h"
 #include "./library/mongoose.h"
+#include "./library/virtual_memory.hpp"
 #include <cstdlib>
 
 using namespace std;
 
 static char *s_http_port = "8000";
 static struct mg_serve_http_opts s_http_server_opts;
-
+static bool flag = false;
+static string devfile = "";
+static bool vm_on = false;
+static int fd = -1;
 static graph my_graph;
+static super_block my_super_block;
+static check_point my_checkpoint;
+
+
+//4-byte + 8-byte + 8-byte = 20-byte
+struct log_entry{
+    uint32_t opcode; //0 for add_node, 1 for remove_node, 2 for remove_edge, 3 for remove_edge;
+    uint64_t node_a;
+    uint64_t node_b; //only read node_b if op is 2 or 3
+};
 
 static void handle_add_node_call(struct mg_connection *nc, struct http_message *hm){
     /*parse from body*/
     uint64_t id;
     sscanf(hm->body.p, "{\"node_id\":%llu", &id);
+    
+    if(vm_on){
+        //check log is full?
+        if(my_super_block.check_log_full()){
+            mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(507) + " XXXX\r\n").c_str());
+            mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + 10) + "\r\n").c_str());
+            mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+            mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+            /* Send empty chunk, the end of response */
+            mg_send_http_chunk(nc, "", 0);
+        }else{
+            uint64_t res = my_graph.add_node(id,fd);
+            mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(res) + " XXXX\r\n").c_str());
+            if(res == 200){
+                my_super_block.write_add_node(id, fd);
+                mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + 10) + "\r\n").c_str());
+                mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+                mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+                mg_printf_http_chunk(nc, "{\r\n\"node_id\":%llu\r\n}\r\n", id);
+                /* Send empty chunk, the end of response */
+            }
+            mg_send_http_chunk(nc, "", 0);
+        }
+        return;
+    }
+    
+    
     /*compute return value*/
     uint64_t res = my_graph.add_node(id);
     
@@ -42,6 +83,35 @@ static void handle_add_edge_call(struct mg_connection *nc, struct http_message *
     sscanf(hm->body.p, "{\"node_a_id\":%llu", &node_a_id);
     sscanf(hm->body.p+i+1, "\"node_b_id\":%llu", &node_b_id);
     
+    if (vm_on) {
+        //check log is full?
+        if (my_super_block.check_log_full()) {
+            mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(507) + " XXXX\r\n").c_str());
+            mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + 10) + "\r\n").c_str());
+            mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+            mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+            /* Send empty chunk, the end of response */
+            mg_send_http_chunk(nc, "", 0);
+        } else {
+            uint64_t res = my_graph.add_edge(node_a_id, node_b_id);
+            mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(res) + " XXXX\r\n").c_str());
+            if (res == 200) {
+                my_super_block.write_add_edge(node_a_id, node_b_id, fd);
+                int len = hm->body.len + 10;
+                mg_printf(nc, "%s", ("Content-Length: " + to_string(len) + "\r\n").c_str());
+                mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+                mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+                mg_printf_http_chunk(nc, "{\r\n\"node_id\":%llu\r\n}\r\n", node_a_id, node_b_id);
+                /* Send empty chunk, the end of response */
+            } else {
+                
+            }
+            mg_send_http_chunk(nc, "", 0);
+        }
+        return;
+    }
+
+    
     /*compute return value*/
     uint64_t res = my_graph.add_edge(node_a_id, node_b_id);
     
@@ -66,8 +136,23 @@ static void handle_remove_node_call(struct mg_connection *nc, struct http_messag
     /*parse from body*/
     sscanf(hm->body.p, "{\"node_id\":%llu", &node_id);
     
+    if(vm_on){
+        
+    }
+    /*
+     log full?
+     log full : checkpoint , call checkpoint
+     507: -> 507
+     log erase -> write log
+     
+     */
+    
     /*compute return value*/
     uint64_t res = my_graph.remove_node(node_id);
+    
+    /*
+     
+     */
     
     string echo = res == 200 ? "OK" : "Bad Request";
     /*send header*/
@@ -94,6 +179,32 @@ static void handle_remove_edge_call(struct mg_connection *nc, struct http_messag
     /*parse from body*/
     sscanf(hm->body.p, "{\"node_a_id\":%llu", &node_a_id);
     sscanf(hm->body.p+i+1, "\"node_b_id\":%llu", &node_b_id);
+    
+    if (vm_on) {
+        //check log is full?
+        if (my_super_block.check_log_full()) {
+            mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(507) + " XXXX\r\n").c_str());
+            mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + 10) + "\r\n").c_str());
+            mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+            mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+            /* Send empty chunk, the end of response */
+            mg_send_http_chunk(nc, "", 0);
+        } else {
+            uint64_t res = my_graph.remove_edge(node_a_id, node_b_id);
+            mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(res) + " XXXX\r\n").c_str());
+            if (res == 200) {
+                my_super_block.write_remove_edge(node_a_id, node_b_id, fd);
+                mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + 10) + "\r\n").c_str());
+                mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+                mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+                mg_printf_http_chunk(nc, "{\r\n\"node_id\":%llu\r\n}\r\n", id);
+                /* Send empty chunk, the end of response */
+            }
+            mg_send_http_chunk(nc, "", 0);
+        }
+        return;
+    }
+
     
     /*compute return value*/
     uint64_t res = my_graph.remove_edge(node_a_id, node_b_id);
@@ -159,6 +270,7 @@ static void handle_get_edge_call(struct mg_connection *nc, struct http_message *
     //               == false if at least one of the vertices does not exist
     if (result.second) {
         sresult = result.first ? "true" : "false";
+        cout << sresult << endl;
         len = sresult.length() + 20 + hm->body.len;
         /* Send headers */
         mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
@@ -173,6 +285,7 @@ static void handle_get_edge_call(struct mg_connection *nc, struct http_message *
         mg_printf(nc, "%s", ("Content-Length: " + to_string(0) + "\r\n").c_str());
         mg_printf(nc, "%s", "Content-Type: application/json\r\n");
         mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
+        cout << "node not in graph" << endl;
     }
     mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
 }
@@ -264,10 +377,19 @@ static void handle_shortest_path_call(struct mg_connection *nc, struct http_mess
 }
 
 static void handle_checkpoint_call(struct mg_connection *nc, struct http_message *hm) {
-        // 200 on Success
-        // 507 if checkpoint is full
-    
+    // 200 on Success
+    // 507 if checkpoint is full
+    // write graph to check point 8GB space
+    my_super_block.cur_generation += 1;
+    int res = my_graph.write_graph_to_vm(check_point& my_checkpoint, int fd);
+    if(res == 200){
+        mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
+        mg_send_http_chunk(nc, "", 0);
+    }else{
+        mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(507) + " Insufficient Storage\r\n").c_str());
+        mg_send_http_chunk(nc, "", 0);
     }
+}
 
 
 static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
@@ -291,6 +413,8 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
                 handle_get_neighbors_call(nc, hm);
             }else if(mg_vcmp(&hm->uri, "/api/v1/shortest_path") == 0){
                 handle_shortest_path_call(nc, hm);
+            }else if(mg_vcmp(&hm->uri, "/api/v1/checkpoint") == 0){
+                handle_checkpoint_call(nc, hm);
             } else {
                 mg_serve_http(nc, hm, s_http_server_opts); /* Serve static content */
             }
@@ -308,11 +432,57 @@ int main(int argc, char *argv[]) {
     char *cp;
     const char *err_str;
     mg_mgr_init(&mgr, NULL);
-    
     //Process command line options to customize HTTP server
     if(argc >= 2){
         s_http_port = argv[1];
     }
+    //-f, port, devfile
+    if(argc == 4){
+        flag = true;
+        s_http_port = argv[2];
+        devfile = argv[3];
+    }
+    if(argc == 3){
+        if(argv[1] == "-f"){
+            flag = true;
+            if(to_string(stoi(argv[2])) == argv[2]){
+                s_http_port = argv[2];
+            }else{
+                devfile = argv[2];
+            }
+        }else{
+            s_http_port = argv[1];
+            devfile = argv[2];
+        }
+    }
+    if(argc == 2){
+        if(argv[1] == "-f"){
+            flag = true;
+        }else if(to_string(stoi(argv[1])) == argv[1]){
+            s_http_port = argv[1];
+        }else{
+            devfile = argv[1];
+        }
+    }
+    
+    if(flag && devfile == ""){
+        fprintf(stderr, "invalid devfile\n");
+        exit(1);
+    }
+    if(devfile != ""){
+        vm_on = true;
+    }
+    if(vm_on){
+        fd = open(devfileXXXX);
+        if(flag){
+            
+        }else{
+            my_super_block = read_super_block_from_vm(fd);
+            my_checkpoint = read_checkpoint_from_vm(fd);
+            my_graph.set_graph_from_vm(my_super_block, my_checkpoint, fd);
+        }
+    }
+    
     
     /* Set HTTP server options */
     memset(&bind_opts, 0, sizeof(bind_opts));
