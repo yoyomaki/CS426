@@ -132,7 +132,7 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
     return make_pair(path, both_node_exist);
 }
 
-void graph::set_graph_from_vm(check_point my_checkpoint, super_block my_super_block, int fd){
+void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_block, int fd){
     int check_point_size = my_check_point.size;
     long offset = 2048000000 + sizeof(check_point);
     //read from check point

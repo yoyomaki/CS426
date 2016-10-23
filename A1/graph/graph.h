@@ -59,7 +59,7 @@ public:
     */
 	pair<uint64_t, bool> shortest_path(uint64_t node_a_id, uint64_t node_b_id);
     
-    void set_graph_from_vm(check_point my_checkpoint, super_block my_super_block, int fd);
+    void set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_block, int fd);
     
     int write_graph_to_vm(check_point& my_checkpoint, int fd);
 };
