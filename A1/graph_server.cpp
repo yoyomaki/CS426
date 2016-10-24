@@ -429,10 +429,10 @@ int main(int argc, char *argv[]) {
     if(argc == 3){
         if(strcmp(argv[1],"-f") == 0){
             flag = true;
-            if(to_string(stoi(argv[2])) == argv[2]){
-                s_http_port = argv[2];
-            }else{
+            if(strcmp(argv[2], "/dev/sdb") == 0){
                 devfile = argv[2];
+            }else{
+                s_http_port = argv[2];
             }
         }else{
             s_http_port = argv[1];
@@ -456,9 +456,10 @@ int main(int argc, char *argv[]) {
         vm_on = true;
     }
     if(vm_on){
-        fd = open(devfile, O_RDWR| O_DIRECT); //
+        fd = open(devfile, O_RDWR | O_DIRECT); //
         if(flag){
-        
+            initialize_superblock(my_super_block);
+            initialize_checkpoint(my_checkpoint);
         }else{
             my_super_block = read_super_block_from_vm(fd);
             my_checkpoint = read_checkpoint_from_vm(fd);

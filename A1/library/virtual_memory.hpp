@@ -86,7 +86,8 @@ struct graph_data{
     uint64_t node_a;
     uint64_t node_b;
 };
-
+void initialize_superblock(super_block& my_superblock);
+void initialize_checkpoint(check_point& my_checkpoint);
 super_block read_super_block_from_vm(int fd);
 check_point read_checkpoint_from_vm(int fd);
     
