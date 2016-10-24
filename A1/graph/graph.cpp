@@ -215,22 +215,22 @@ int graph::write_graph_to_vm(check_point& my_checkpoint, int fd){
     this->generate_edge_pairs(edge_pairs);
     //long long offset = 2 * 1024 * 1024 * 1024 + 4096;
     long long offset = OFFSET + (1 << 12);
-    long long total_page_av = (10 * 1024 * 1024 - offset) / 4096;
+    long long total_page_av = (OFFSET*5 - offset) / 4096;
     int total_page = edge_pairs.size() / 256;
-    if (total_page > total_page_av) {
+    int remainder = edge_pairs.size() % 256;
+    if (total_page > total_page_av || (total_page == total_page_av && remainder > 0)) {
         return 507;
     }
     int index = 0;
     int page_no = 0;
-    graph_data* start_data = (graph_data*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + page_no * 4096);
+    graph_page* page = (graph_page*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + page_no * 4096);
     for (auto& edge : edge_pairs) {
-        graph_data* single_edge = start_data + index;
-        single_edge->node_a = edge.first;
-        single_edge->node_b = edge.second;
+        page->edges[index].node_a = edge.first;
+        page->edges[index].node_b = edge.second;
         index += 1;
         if (index == 256) {
             page_no += 1;
-            start_data = (graph_data*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + page_no * 4096);
+            page = (graph_page*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + page_no * 4096);
             index = 0;
         }
     }
