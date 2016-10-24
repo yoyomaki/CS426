@@ -24,10 +24,10 @@ void super_block::write_add_node(uint64_t id, int fd){
         cur_log_page->logs[0].node_a = id;
         cur_log_page->logs[0].node_b = 0;
     }else{
+        cur_log_page->logs[cur_log_page->num_entry].opcode = 0;
+        cur_log_page->logs[cur_log_page->num_entry].node_a = id;
+        cur_log_page->logs[cur_log_page->num_entry].node_b = 0;
         cur_log_page->num_entry += 1;
-        cur_log_page->logs[0].opcode = 0;
-        cur_log_page->logs[0].node_a = id;
-        cur_log_page->logs[0].node_b = 0;
     }
 }
 
@@ -43,10 +43,10 @@ void super_block::write_remove_node(uint64_t id, int fd){
         cur_log_page->logs[0].node_a = id;
         cur_log_page->logs[0].node_b = 0;
     }else{
+        cur_log_page->logs[cur_log_page->num_entry].opcode = 1;
+        cur_log_page->logs[cur_log_page->num_entry].node_a = id;
+        cur_log_page->logs[cur_log_page->num_entry].node_b = 0;
         cur_log_page->num_entry += 1;
-        cur_log_page->logs[0].opcode = 1;
-        cur_log_page->logs[0].node_a = id;
-        cur_log_page->logs[0].node_b = 0;
     }
 }
 
@@ -62,10 +62,10 @@ void super_block::write_add_edge(uint64_t node_a_id, uint64_t node_b_id, int fd)
         cur_log_page->logs[0].node_a = node_a_id;
         cur_log_page->logs[0].node_b = node_b_id;
     }else{
+        cur_log_page->logs[cur_log_page->num_entry += 1;].opcode = 2;
+        cur_log_page->logs[cur_log_page->num_entry += 1;].node_a = node_a_id;
+        cur_log_page->logs[cur_log_page->num_entry += 1;].node_b = node_b_id;
         cur_log_page->num_entry += 1;
-        cur_log_page->logs[0].opcode = 2;
-        cur_log_page->logs[0].node_a = node_a_id;
-        cur_log_page->logs[0].node_b = node_b_id;
     }
 }
 
@@ -81,10 +81,10 @@ void super_block::write_remove_edge(uint64_t node_a_id, uint64_t node_b_id, int 
         cur_log_page->logs[0].node_a = node_a_id;
         cur_log_page->logs[0].node_b = node_b_id;
     }else{
+        cur_log_page->logs[cur_log_page->num_entry += 1;].opcode = 3;
+        cur_log_page->logs[cur_log_page->num_entry += 1;].node_a = node_a_id;
+        cur_log_page->logs[cur_log_page->num_entry += 1;].node_b = node_b_id;
         cur_log_page->num_entry += 1;
-        cur_log_page->logs[0].opcode = 3;
-        cur_log_page->logs[0].node_a = node_a_id;
-        cur_log_page->logs[0].node_b = node_b_id;
     }
 }
 
@@ -100,7 +100,8 @@ super_block read_super_block_from_vm(int fd){
 
 check_point read_checkpoint_from_vm(int fd){
     check_point my_checkpoint;
-    check_point* checkpoint_in_vm = (check_point*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 2 * 1024 * 1024 * 1024);
+    long long offset = (1 << 31);
+    check_point* checkpoint_in_vm = (check_point*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
     my_checkpoint.size = checkpoint_in_vm->size;
     return my_checkpoint;
 }
