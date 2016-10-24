@@ -131,9 +131,9 @@ void clear_superblock_after_checkpoint(int fd){
     log_page->check_sum = 222;
 }
 
-
+const long long OFFSET = 2147483648ll;
 void initialize_checkpoint(int fd){
-    long long offset = (1 << 31);
+    long long offset = OFFSET;
     cout << offset << endl;
     check_point *cp = (check_point*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
     if (cp == NULL) return ;
