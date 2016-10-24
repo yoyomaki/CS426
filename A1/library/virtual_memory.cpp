@@ -134,7 +134,9 @@ void clear_superblock_after_checkpoint(int fd){
 
 void initialize_checkpoint(int fd){
     long long offset = (1 << 31);
+    cout << 5 << endl;
     check_point *cp = (check_point*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
+    cout << 6 << endl;
     cp->size = 0;
 }
 
