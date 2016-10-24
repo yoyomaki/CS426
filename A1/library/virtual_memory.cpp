@@ -100,7 +100,7 @@ super_block read_super_block_from_vm(int fd){
 
 check_point read_checkpoint_from_vm(int fd){
     check_point my_checkpoint;
-    long long offset = (1 << 31);
+    long long offset = OFFSET;
     check_point* checkpoint_in_vm = (check_point*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
     my_checkpoint.size = checkpoint_in_vm->size;
     return my_checkpoint;
@@ -131,7 +131,7 @@ void clear_superblock_after_checkpoint(int fd){
     log_page->check_sum = 222;
 }
 
-const long long OFFSET = 2147483648ll;
+
 void initialize_checkpoint(int fd){
     long long offset = OFFSET;
     cout << offset << endl;

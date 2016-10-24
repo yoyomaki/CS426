@@ -17,7 +17,7 @@
 #include <sys/mman.h>
 #include <utility>
 using namespace std;
-
+const long long OFFSET = 2147483648ll;
 struct node{
 	uint64_t id;
     unordered_map<uint64_t, node*> neighbors;
