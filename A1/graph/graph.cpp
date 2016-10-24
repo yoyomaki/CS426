@@ -135,20 +135,21 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
 
 void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_block, int fd){
     int check_point_size = my_check_point.size;
-    long offset = 2048000000 + sizeof(check_point);
+    long offset = 2 * 1024 * 1024 * 1024 + 4096;
     // read from check point
     // everytime it will read a page or multiple pages --> 4096*x
     // one graph_data is 16 bytes
     int num_pages = check_point_size * 16 / 4096 + 1;
     int index = 0;
     for (int i = 0; i < num_pages; i++) {
-        graph_data* page = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + i * 4096);
+        graph_data* page = (graph_data*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + i * 4096);
         for (int j = 0; j < 256; j++) {
             if (index == check_point_size) {
                 break;
             }
             index++;
-            graph_data* edge = page + j * sizeof(graph_data);
+            // + j = + j's graph_data size
+            graph_data* edge = page + j;
             node* node_a, node_b;
             // add node
             if (edge->node_a == edge->node_b) {
@@ -177,10 +178,12 @@ void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_
 
     // read from log
     for (int i = 1; i <= my_super_block.cur_block; i++) {
-        log_block* log_page = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, i * 4096);
+        log_block* log_page = (log_block*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, i * 4096);
+        // bypass the log_block
+        log_page += 1;
         if (log_page->generation != my_super_block.cur_generation) break;
         for (int j = 0; j < log_page->num_entry; j++) {
-            log_entry* single_log = log_page + j * sizeof(log_entry);
+            log_entry* single_log = (log_entry*)log_page + j;
             if (single_log->opcode == 0) {
                 this->add_node(single_log->node_a);
             } else if (single_log->opcode == 1) {
@@ -208,21 +211,30 @@ void graph::generate_edge_pairs(unordered_set<pair<uint64_t, uint64_t>>& unique_
     }
 }
 
+
 int graph::write_graph_to_vm(check_point& my_checkpoint, int fd){
     unordered_set<pair<uint64_t, uint64_t>> edge_pairs;
     this->generate_edge_pairs(edge_pairs);
-    long offset = 2048000000 + sizeof(check_point);
-    int i = 0;
-    for(auto& edge : edge_pairs){
-        graph_data* single_edge = mmap(NULL, sizeof(graph_data), PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + i * sizeof(graph_data));
-        if(single_edge == NULL){
-            my_checkpoint.size = i;
-            return 507;
-        }
+    // ignore the first block(for checkpoint)
+    long offset = 2 * 1024 * 1024 * 1024 + 4096;
+    long total_page_av = (10 * 1024 * 1024 - offset) / 4096;
+    int total_page = edge_pairs.size() / 256;
+    if (total_page > total_page_av) {
+        return 507;
+    }
+    int index = 0;
+    int page_no = 0;
+    graph_data* start_data = (graph_data*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + page_no * 4096);
+    for (anto& edge : edge_pairs)) {
+        graph_data* single_edge = start_data + index;
         single_edge->node_a = edge.first;
         single_edge->node_b = edge.second;
-        i += 1;
-    }
+        index += 1;
+        if (index == 256) {
+            page_no += 1;
+            start_data = (graph_data*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + page_no * 4096);
+            index = 0;
+        }
     my_checkpoint.size = edge_pairs.size();
     return 200;
 }

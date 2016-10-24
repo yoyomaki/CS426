@@ -68,7 +68,8 @@ struct log_entry{
  |  node a, node b |
  -----------------
 */
-    
+
+// 8 bytes
 struct check_point{
     uint64_t size;  // number of graph_data, 8GB first line
 };
