@@ -134,13 +134,15 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
 
 void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_block, int fd){
     int check_point_size = my_checkpoint.size;
-    long long offset = (1 << 31) + (1 << 12);
+    uint64_t offset = (1 << 31) + (1 << 12);
+    cout << offset << endl;
     //read from check point
     int remainder = check_point_size % 256;
     int num_pages = check_point_size / 256 + (remainder == 0 ? 0 : 1);
     int index = 0;
     for (int i = 0; i < num_pages; i++) {
-        graph_page* page = (graph_page*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + i * 4096);
+        long long tmp = offset + i * 4096;
+        graph_page* page = (graph_page*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, tmp);
         for (int j = 0; j < 256; j++) {
             if (index == check_point_size) {
                 break;
