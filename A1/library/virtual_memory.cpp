@@ -117,6 +117,18 @@ check_point read_checkpoint_from_vm(int fd){
     return my_checkpoint;
 }
 
+void initialize_superblock(super_block& my_superblock){
+    my_superblock.cur_generation = 1;
+    my_superblock.cur_block = 1;
+    my_superblock.end_block = 250000;
+    my_superblock.checksum = 222;
+}
+
+
+void initialize_checkpoint(check_point& my_checkpoint){
+    my_checkpoint.size = 0;
+}
+
 
 
 
