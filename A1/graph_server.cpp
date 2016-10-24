@@ -458,13 +458,12 @@ int main(int argc, char *argv[]) {
     if(vm_on){
         fd = open(devfile, O_RDWR | O_DIRECT); //
         if(flag){
-            initialize_superblock(my_super_block);
-            initialize_checkpoint(my_checkpoint);
-        }else{
-            my_super_block = read_super_block_from_vm(fd);
-            my_checkpoint = read_checkpoint_from_vm(fd);
-            my_graph.set_graph_from_vm(my_checkpoint, my_super_block, fd);
+            initialize_superblock(fd);
+            initialize_checkpoint(fd);
         }
+        my_super_block = read_super_block_from_vm(fd);
+        my_checkpoint = read_checkpoint_from_vm(fd);
+        my_graph.set_graph_from_vm(my_checkpoint, my_super_block, fd);
     }
     
     /* Set HTTP server options */
