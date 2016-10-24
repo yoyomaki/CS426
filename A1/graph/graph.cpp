@@ -134,13 +134,15 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
 
 void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_block, int fd){
     int check_point_size = my_checkpoint.size;
-    long long offset = (1 << 31) + (1 << 12);
+    uint64_t offset = OFFSET + (1 << 12);
+    cout << offset << endl;
     //read from check point
     int remainder = check_point_size % 256;
     int num_pages = check_point_size / 256 + (remainder == 0 ? 0 : 1);
     int index = 0;
     for (int i = 0; i < num_pages; i++) {
-        graph_page* page = (graph_page*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + i * 4096);
+        long long tmp = offset + i * 4096;
+        graph_page* page = (graph_page*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, tmp);
         for (int j = 0; j < 256; j++) {
             if (index == check_point_size) {
                 break;
@@ -212,23 +214,23 @@ int graph::write_graph_to_vm(check_point& my_checkpoint, int fd){
     vector<pair<uint64_t, uint64_t>> edge_pairs;
     this->generate_edge_pairs(edge_pairs);
     //long long offset = 2 * 1024 * 1024 * 1024 + 4096;
-    long long offset = (1 << 31) + (1 << 12);
-    long long total_page_av = (10 * 1024 * 1024 - offset) / 4096;
+    long long offset = OFFSET + (1 << 12);
+    long long total_page_av = (OFFSET*5 - offset) / 4096;
     int total_page = edge_pairs.size() / 256;
-    if (total_page > total_page_av) {
+    int remainder = edge_pairs.size() % 256;
+    if (total_page > total_page_av || (total_page == total_page_av && remainder > 0)) {
         return 507;
     }
     int index = 0;
     int page_no = 0;
-    graph_data* start_data = (graph_data*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + page_no * 4096);
+    graph_page* page = (graph_page*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + page_no * 4096);
     for (auto& edge : edge_pairs) {
-        graph_data* single_edge = start_data + index;
-        single_edge->node_a = edge.first;
-        single_edge->node_b = edge.second;
+        page->edges[index].node_a = edge.first;
+        page->edges[index].node_b = edge.second;
         index += 1;
         if (index == 256) {
             page_no += 1;
-            start_data = (graph_data*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + page_no * 4096);
+            page = (graph_page*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + page_no * 4096);
             index = 0;
         }
     }

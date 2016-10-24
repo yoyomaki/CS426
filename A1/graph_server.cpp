@@ -369,13 +369,14 @@ static void handle_checkpoint_call(struct mg_connection *nc, struct http_message
     // write graph to check point 8GB space
     my_super_block.cur_generation += 1;
     int res = my_graph.write_graph_to_vm(my_checkpoint, fd);
+    my_super_block = read_super_block_from_vm(fd);
+    my_checkpoint = read_checkpoint_from_vm(fd);
     if(res == 200){
         mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
-        mg_send_http_chunk(nc, "", 0);
     }else{
         mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(507) + " Insufficient Storage\r\n").c_str());
-        mg_send_http_chunk(nc, "", 0);
     }
+    mg_send_http_chunk(nc, "", 0);
 }
 
 
@@ -429,11 +430,7 @@ int main(int argc, char *argv[]) {
     if(argc == 3){
         if(strcmp(argv[1],"-f") == 0){
             flag = true;
-            if(strcmp(argv[2], "/dev/sdb") == 0){
-                devfile = argv[2];
-            }else{
-                s_http_port = argv[2];
-            }
+            devfile = argv[2];
         }else{
             s_http_port = argv[1];
             devfile = argv[2];
