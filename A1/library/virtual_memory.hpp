@@ -40,7 +40,7 @@ struct super_block{
     uint32_t cur_block;
     uint32_t end_block;
     super_block(){
-        end_block = 250000;
+        end_block = 1024;
     }
     bool check_log_full(int fd);
     void write_add_node(uint64_t id, int fd);
@@ -49,19 +49,22 @@ struct super_block{
     void write_remove_edge(uint64_t node_a_id, uint64_t node_b_id, int fd);
 };
 
-struct log_block{
-    uint32_t generation;
-    uint32_t num_entry;
-    uint64_t check_sum;
-};
-
-
-//4-byte + 8-byte + 8-byte = 20-byte
 struct log_entry{
     uint32_t opcode;
     uint64_t node_a;
     uint64_t node_b; //only read node_b if op is 2 or 3
 };
+
+struct log_block{
+    uint32_t generation;
+    uint32_t num_entry;
+    uint64_t check_sum;
+    log_entry logs[204];
+};
+
+
+//4-byte + 8-byte + 8-byte = 20-byte
+
 
 
 
@@ -86,6 +89,12 @@ struct graph_data{
     uint64_t node_a;
     uint64_t node_b;
 };
+
+struct graph_page{
+    graph_data edges[256];
+};
+
+
 
 void initialize_superblock(int fd);
 
