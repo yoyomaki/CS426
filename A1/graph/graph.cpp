@@ -131,3 +131,106 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
     }
     return make_pair(path, both_node_exist);
 }
+
+void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_block, int fd){
+    int check_point_size = my_checkpoint.size;
+    long long offset = (1 << 31) + (1 << 12);
+    //read from check point
+    int num_pages = check_point_size * 16 / 4096 + 1;
+    int index = 0;
+    for (int i = 0; i < num_pages; i++) {
+        graph_data* page = (graph_data*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + i * 4096);
+        for (int j = 0; j < 256; j++) {
+            if (index == check_point_size) {
+                break;
+            }
+            index++;
+            // + j = + j's graph_data size
+            graph_data* edge = page + j;
+            node* node_a = NULL;
+            node* node_b = NULL;
+            // add node
+            if (edge->node_a == edge->node_b) {
+                if (nodes.find(edge->node_a) == nodes.end()) {
+                    node_a = new node(edge->node_a);
+                    nodes[edge->node_a] = node_a;
+                }
+                // add edge
+            } else {
+                if (nodes.find(edge->node_a) == nodes.end()) {
+                    node_a = new node(edge->node_a);
+                    nodes[edge->node_a] = node_a;
+                } else {
+                    node_a = nodes[edge->node_a];
+                }
+                if (nodes.find(edge->node_b) == nodes.end()) {
+                    node_b = new node(edge->node_b);
+                } else {
+                    node_b = nodes[edge->node_b];
+                }
+                node_a->neighbors[edge->node_b] = node_b;
+                node_b->neighbors[edge->node_a] = node_a;
+            }
+        }
+    }
+    //read from log
+    for(int i = 1; i <= my_super_block.cur_block; ++i){
+        log_block* log_page = (log_block*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, i * 4096);
+        log_block* tmp = log_page + 1;
+        if(log_page->generation != my_super_block.cur_generation) continue;
+        for(int j = 0; j < log_page->num_entry; ++j){
+            log_entry* single_log = (log_entry*)tmp + j;
+            if(single_log->opcode == 0){
+                this->add_node(single_log->node_a);
+            }else if(single_log->opcode == 1){
+                this->add_edge(single_log->node_a, single_log->node_b);
+            }else if(single_log->opcode == 2){
+                this->remove_node(single_log->node_a);
+            }else{
+                this->remove_edge(single_log->node_a, single_log->node_b);
+            }
+        }
+    }
+}
+
+void graph::generate_edge_pairs(vector<pair<uint64_t, uint64_t>>& unique_pairs){
+    for(auto& a : nodes){
+        if(a.second->neighbors.size() == 0){
+            unique_pairs.push_back(make_pair(a.first, a.first));
+        }else{
+            for(auto& b : a.second->neighbors){
+                if(find(unique_pairs.begin(), unique_pairs.end(), make_pair(b.first, a.first)) == unique_pairs.end()){
+                    unique_pairs.push_back(make_pair(a.first, b.first));
+                }
+            }
+        }
+    }
+}
+
+int graph::write_graph_to_vm(check_point& my_checkpoint, int fd){
+    vector<pair<uint64_t, uint64_t>> edge_pairs;
+    this->generate_edge_pairs(edge_pairs);
+    //long long offset = 2 * 1024 * 1024 * 1024 + 4096;
+    long long offset = (1 << 31) + (1 << 12);
+    long long total_page_av = (10 * 1024 * 1024 - offset) / 4096;
+    int total_page = edge_pairs.size() / 256;
+    if (total_page > total_page_av) {
+        return 507;
+    }
+    int index = 0;
+    int page_no = 0;
+    graph_data* start_data = (graph_data*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + page_no * 4096);
+    for (auto& edge : edge_pairs) {
+        graph_data* single_edge = start_data + index;
+        single_edge->node_a = edge.first;
+        single_edge->node_b = edge.second;
+        index += 1;
+        if (index == 256) {
+            page_no += 1;
+            start_data = (graph_data*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + page_no * 4096);
+            index = 0;
+        }
+    }
+    my_checkpoint.size = edge_pairs.size();
+    return 200;
+}
