@@ -130,6 +130,19 @@ void initialize_superblock(int fd){
 }
 
 
+void clear_superblock_after_checkpoint(int fd){
+    super_block *spblck = (super_block*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    spblck->cur_generation += 1;
+    spblck->cur_block = 1;
+    spblck->end_block = 250000;
+    spblck->check_sum = 222;
+    log_block *log_page = (log_block*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 4096);
+    log_page->num_entry = 0;
+    log_page->generation = spblck->cur_generation;
+    log_page->check_sum = 222;
+}
+
+
 void initialize_checkpoint(check_point& my_checkpoint, int fd){
     long long offset = (1 << 31);
     check_point *cp = (check_point*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
