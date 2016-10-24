@@ -62,9 +62,9 @@ void super_block::write_add_edge(uint64_t node_a_id, uint64_t node_b_id, int fd)
         cur_log_page->logs[0].node_a = node_a_id;
         cur_log_page->logs[0].node_b = node_b_id;
     }else{
-        cur_log_page->logs[cur_log_page->num_entry += 1;].opcode = 2;
-        cur_log_page->logs[cur_log_page->num_entry += 1;].node_a = node_a_id;
-        cur_log_page->logs[cur_log_page->num_entry += 1;].node_b = node_b_id;
+        cur_log_page->logs[cur_log_page->num_entry].opcode = 2;
+        cur_log_page->logs[cur_log_page->num_entry].node_a = node_a_id;
+        cur_log_page->logs[cur_log_page->num_entry].node_b = node_b_id;
         cur_log_page->num_entry += 1;
     }
 }
@@ -81,9 +81,9 @@ void super_block::write_remove_edge(uint64_t node_a_id, uint64_t node_b_id, int 
         cur_log_page->logs[0].node_a = node_a_id;
         cur_log_page->logs[0].node_b = node_b_id;
     }else{
-        cur_log_page->logs[cur_log_page->num_entry += 1;].opcode = 3;
-        cur_log_page->logs[cur_log_page->num_entry += 1;].node_a = node_a_id;
-        cur_log_page->logs[cur_log_page->num_entry += 1;].node_b = node_b_id;
+        cur_log_page->logs[cur_log_page->num_entry].opcode = 3;
+        cur_log_page->logs[cur_log_page->num_entry].node_a = node_a_id;
+        cur_log_page->logs[cur_log_page->num_entry].node_b = node_b_id;
         cur_log_page->num_entry += 1;
     }
 }
