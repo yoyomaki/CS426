@@ -121,7 +121,11 @@ void initialize_superblock(super_block& my_superblock){
     my_superblock.cur_generation = 1;
     my_superblock.cur_block = 1;
     my_superblock.end_block = 250000;
-    my_superblock.checksum = 222;
+    my_superblock.check_sum = 222;
+    log_block *log_page = (log_block*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 4096);
+    log_page->num_entry = 0;
+    log_page->generation = my_superblock.cur_generation;
+    log_page->check_sum = 222;
 }
 
 
