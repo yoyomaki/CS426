@@ -442,10 +442,10 @@ int main(int argc, char *argv[]) {
     if(argc == 2){
         if(strcmp(argv[1],"-f") == 0){
             flag = true;
-        }else if(to_string(stoi(argv[1])) == argv[1]){
-            s_http_port = argv[1];
-        }else{
+        }else if(strcmp(argv[1], "/dev/sdb") == 0){
             devfile = argv[1];
+        }else{
+            s_http_port = argv[1];
         }
     }
     if(flag && (strcmp(devfile,"") == 0)){
@@ -456,7 +456,7 @@ int main(int argc, char *argv[]) {
         vm_on = true;
     }
     if(vm_on){
-        fd = open(devfile, O_RDWR); //| O_DIRECT
+        fd = open(devfile, O_RDWR| O_DIRECT); //
         if(flag){
         
         }else{
