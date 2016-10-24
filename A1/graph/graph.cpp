@@ -136,62 +136,63 @@ void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_
     int check_point_size = my_checkpoint.size;
     long long offset = (1 << 31) + (1 << 12);
     //read from check point
-    int num_pages = check_point_size * 16 / 4096 + 1;
+    int remainder = check_point_size % 256;
+    int num_pages = check_point_size / 256 + (remainder == 0 ? 0 : 1);
     int index = 0;
     for (int i = 0; i < num_pages; i++) {
-        graph_data* page = (graph_data*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + i * 4096);
+        graph_page* page = (graph_page*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + i * 4096);
         for (int j = 0; j < 256; j++) {
             if (index == check_point_size) {
                 break;
             }
             index++;
             // + j = + j's graph_data size
-            graph_data* edge = page + j;
+            graph_data edge = page->edges[j];
             node* node_a = NULL;
             node* node_b = NULL;
             // add node
-            if (edge->node_a == edge->node_b) {
-                if (nodes.find(edge->node_a) == nodes.end()) {
-                    node_a = new node(edge->node_a);
-                    nodes[edge->node_a] = node_a;
+            if (edge.node_a == edge.node_b) {
+                if (nodes.find(edge.node_a) == nodes.end()) {
+                    node_a = new node(edge.node_a);
+                    nodes[edge.node_a] = node_a;
                 }
                 // add edge
             } else {
-                if (nodes.find(edge->node_a) == nodes.end()) {
-                    node_a = new node(edge->node_a);
-                    nodes[edge->node_a] = node_a;
+                if (nodes.find(edge.node_a) == nodes.end()) {
+                    node_a = new node(edge.node_a);
+                    nodes[edge.node_a] = node_a;
                 } else {
-                    node_a = nodes[edge->node_a];
+                    node_a = nodes[edge.node_a];
                 }
-                if (nodes.find(edge->node_b) == nodes.end()) {
-                    node_b = new node(edge->node_b);
+                if (nodes.find(edge.node_b) == nodes.end()) {
+                    node_b = new node(edge.node_b);
                 } else {
-                    node_b = nodes[edge->node_b];
+                    node_b = nodes[edge.node_b];
                 }
-                node_a->neighbors[edge->node_b] = node_b;
-                node_b->neighbors[edge->node_a] = node_a;
+                node_a->neighbors[edge.node_b] = node_b;
+                node_b->neighbors[edge.node_a] = node_a;
             }
         }
     }
     //read from log
     for(int i = 1; i <= my_super_block.cur_block; ++i){
         log_block* log_page = (log_block*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, i * 4096);
-        log_block* tmp = log_page + 1;
         if(log_page->generation != my_super_block.cur_generation) break;
         for(int j = 0; j < log_page->num_entry; ++j){
-            log_entry* single_log = (log_entry*)tmp + j;
-            if(single_log->opcode == 0){
-                this->add_node(single_log->node_a);
-            }else if(single_log->opcode == 1){
-                this->add_edge(single_log->node_a, single_log->node_b);
-            }else if(single_log->opcode == 2){
-                this->remove_node(single_log->node_a);
+            log_entry single_log = log_page->logs[j];
+            if(single_log.opcode == 0){
+                this->add_node(single_log.node_a);
+            }else if(single_log.opcode == 1){
+                this->add_edge(single_log.node_a, single_log.node_b);
+            }else if(single_log.opcode == 2){
+                this->remove_node(single_log.node_a);
             }else{
-                this->remove_edge(single_log->node_a, single_log->node_b);
+                this->remove_edge(single_log.node_a, single_log.node_b);
             }
         }
     }
 }
+
 
 void graph::generate_edge_pairs(vector<pair<uint64_t, uint64_t>>& unique_pairs){
     for(auto& a : nodes){
