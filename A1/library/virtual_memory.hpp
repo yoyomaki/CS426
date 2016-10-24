@@ -33,7 +33,7 @@ using namespace std;
   -----------
 */
 
-
+const long long OFFSET = 2147483648ll;
 struct super_block{
     uint32_t cur_generation;
     uint64_t check_sum;

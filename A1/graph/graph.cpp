@@ -134,7 +134,7 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
 
 void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_block, int fd){
     int check_point_size = my_checkpoint.size;
-    uint64_t offset = (1 << 31) + (1 << 12);
+    uint64_t offset = OFFSET + (1 << 12);
     cout << offset << endl;
     //read from check point
     int remainder = check_point_size % 256;
@@ -214,7 +214,7 @@ int graph::write_graph_to_vm(check_point& my_checkpoint, int fd){
     vector<pair<uint64_t, uint64_t>> edge_pairs;
     this->generate_edge_pairs(edge_pairs);
     //long long offset = 2 * 1024 * 1024 * 1024 + 4096;
-    long long offset = (1 << 31) + (1 << 12);
+    long long offset = OFFSET + (1 << 12);
     long long total_page_av = (10 * 1024 * 1024 - offset) / 4096;
     int total_page = edge_pairs.size() / 256;
     if (total_page > total_page_av) {
