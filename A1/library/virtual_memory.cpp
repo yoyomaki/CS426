@@ -136,7 +136,7 @@ void initialize_checkpoint(int fd){
     long long offset = (1 << 31);
     cout << offset << endl;
     check_point *cp = (check_point*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
-    if (cp == -1) return ;
+    if (cp == NULL) return ;
     cp->size = 0;
 }
 
