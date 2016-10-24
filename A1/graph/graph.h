@@ -10,6 +10,12 @@
 #include <iostream>
 #include <algorithm>
 #include "../library/virtual_memory.hpp"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <utility>
 using namespace std;
 
 struct node{
@@ -21,7 +27,7 @@ struct node{
 class graph{
 private:
 	unordered_map<uint64_t, node*> nodes;
-    void graph::generate_edge_pairs(unordered_set<pair<uint64_t, uint64_t>>& unique_pairs);
+    void generate_edge_pairs(vector<pair<uint64_t, uint64_t>>& unique_pairs);
 public:
     //return 200 on success, 204 if the node already exists
 	uint64_t add_node(uint64_t node_id);

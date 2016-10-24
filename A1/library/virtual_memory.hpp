@@ -9,7 +9,12 @@
 #define virtual_memory_hpp
 
 #include <stdio.h>
-#include <../graph/graph.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <iostream>
+#include <sys/mman.h>
 using namespace std;
 /*
  Log: 2GB
@@ -33,11 +38,16 @@ struct super_block{
     uint32_t cur_generation;
     uint64_t check_sum;
     uint32_t cur_block;
-    uint32_t end_block = 250000;
-    bool check_log_full(void);
+    uint32_t end_block;
+    super_block(){
+        end_block = 250000;
+    }
+    bool check_log_full(int fd);
     void write_add_node(uint64_t id, int fd);
     void write_remove_node(uint64_t id, int fd);
-}
+    void write_add_edge(uint64_t node_a_id, uint64_t node_b_id, int fd);
+    void write_remove_edge(uint64_t node_a_id, uint64_t node_b_id, int fd);
+};
 
 struct log_block{
     uint32_t generation;
