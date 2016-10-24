@@ -15,7 +15,6 @@ static bool flag = false;
 static char *devfile = "";
 static bool vm_on = false;
 static int fd = -1;
-static int log_page_num = 0;
 static graph my_graph;
 static super_block my_super_block;
 static check_point my_checkpoint;
@@ -322,7 +321,7 @@ static void handle_shortest_path_call(struct mg_connection *nc, struct http_mess
     uint64_t path_length;
     pair<uint64_t, bool> result;
     
-    int len = 20;
+//    int len = 20;
     int i;
     for (i = 0; i < strlen(hm->body.p); i++) {
         if (hm->body.p[i] == ',') {
@@ -416,8 +415,8 @@ int main(int argc, char *argv[]) {
     struct mg_mgr mgr;
     struct mg_connection *nc;
     struct mg_bind_opts bind_opts;
-    int i;
-    char *cp;
+//    int i;
+//    char *cp;
     const char *err_str;
     mg_mgr_init(&mgr, NULL);
     //Process command line options to customize HTTP server
