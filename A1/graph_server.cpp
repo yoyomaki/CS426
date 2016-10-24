@@ -458,10 +458,14 @@ int main(int argc, char *argv[]) {
     if(vm_on){
         fd = open(devfile, O_RDWR | O_DIRECT); //
         if(flag){
+            cout << "1\n";
             initialize_superblock(fd);
+            cout << "2\n";
             initialize_checkpoint(fd);
         }
+        cout << "3\n";
         my_super_block = read_super_block_from_vm(fd);
+        cout << "4\n";
         my_checkpoint = read_checkpoint_from_vm(fd);
         my_graph.set_graph_from_vm(my_checkpoint, my_super_block, fd);
     }
