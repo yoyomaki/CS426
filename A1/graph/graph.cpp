@@ -177,7 +177,7 @@ void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_
     for(int i = 1; i <= my_super_block.cur_block; ++i){
         log_block* log_page = (log_block*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, i * 4096);
         log_block* tmp = log_page + 1;
-        if(log_page->generation != my_super_block.cur_generation) continue;
+        if(log_page->generation != my_super_block.cur_generation) break;
         for(int j = 0; j < log_page->num_entry; ++j){
             log_entry* single_log = (log_entry*)tmp + j;
             if(single_log->opcode == 0){
@@ -231,6 +231,7 @@ int graph::write_graph_to_vm(check_point& my_checkpoint, int fd){
             index = 0;
         }
     }
+    clear_superblock_after_checkpoint(fd);
     my_checkpoint.size = edge_pairs.size();
     return 200;
 }

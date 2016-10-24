@@ -87,6 +87,7 @@ struct graph_data{
     uint64_t node_b;
 };
 void initialize_superblock(int fd);
+void clear_superblock_after_checkpoint(int fd);
 void initialize_checkpoint(int fd);
 super_block read_super_block_from_vm(int fd);
 check_point read_checkpoint_from_vm(int fd);
