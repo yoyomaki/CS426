@@ -136,7 +136,8 @@ void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_
     int check_point_size = my_checkpoint.size;
     long long offset = (1 << 31) + (1 << 12);
     //read from check point
-    int num_pages = check_point_size * 16 / 4096 + 1;
+    int remainder = check_point_size * sizeof(graph_data) % 4096;
+    int num_pages = check_point_size * sizeof(graph_data) / 4096 + (remainder == 0 ? 0 : 1);
     int index = 0;
     for (int i = 0; i < num_pages; i++) {
         graph_data* page = (graph_data*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset + i * 4096);
@@ -176,7 +177,7 @@ void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_
     //read from log
     for(int i = 1; i <= my_super_block.cur_block; ++i){
         log_block* log_page = (log_block*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, i * 4096);
-        log_block* tmp = log_page + 1;
+        log_entry* tmp = log_page + 1;
         if(log_page->generation != my_super_block.cur_generation) break;
         for(int j = 0; j < log_page->num_entry; ++j){
             log_entry* single_log = (log_entry*)tmp + j;
