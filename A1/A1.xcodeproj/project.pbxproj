@@ -12,6 +12,8 @@
 		BE29C5121D88999E002E95C5 /* graph_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = graph_server.cpp; sourceTree = "<group>"; };
 		BE29C5141D88999E002E95C5 /* mongoose.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mongoose.c; sourceTree = "<group>"; };
 		BE29C5151D88999E002E95C5 /* mongoose.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mongoose.h; sourceTree = "<group>"; };
+		D97FFE551DBBE9C000508B7D /* virtual_memory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = virtual_memory.cpp; path = library/virtual_memory.cpp; sourceTree = SOURCE_ROOT; };
+		D97FFE561DBBE9C000508B7D /* virtual_memory.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = virtual_memory.hpp; path = library/virtual_memory.hpp; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -38,6 +40,8 @@
 			children = (
 				BE29C5141D88999E002E95C5 /* mongoose.c */,
 				BE29C5151D88999E002E95C5 /* mongoose.h */,
+				D97FFE551DBBE9C000508B7D /* virtual_memory.cpp */,
+				D97FFE561DBBE9C000508B7D /* virtual_memory.hpp */,
 			);
 			path = library;
 			sourceTree = "<group>";
