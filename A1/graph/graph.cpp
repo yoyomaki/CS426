@@ -134,8 +134,9 @@ pair<uint64_t, bool> graph::shortest_path(uint64_t node_a_id, uint64_t node_b_id
 
 void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_block, int fd){
     int check_point_size = my_checkpoint.size;
+      cout << "starting to set graph from vm, checkpoint size is " << check_point_size<< endl;
     uint64_t offset = OFFSET + (1 << 12);
-    cout << offset << endl;
+//    cout << "a" << offset << endl;
     //read from check point
     int remainder = check_point_size % 256;
     int num_pages = check_point_size / 256 + (remainder == 0 ? 0 : 1);
@@ -176,12 +177,26 @@ void graph::set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_
             }
         }
     }
+    
     //read from log
+    cout << "reading log , cur_block is " << my_super_block.cur_block << endl;
     for(uint32_t i = 1; i <= my_super_block.cur_block; ++i){
         log_block* log_page = (log_block*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, i * 4096);
+        uint64_t cur_cs = log_page->check_sum;
+        if (cur_cs != (log_page->generation ^ log_page->num_entry)) {
+//            cout << "gen is " << log_page->generation << " entry is " << log_page->num_entry << endl;
+//            cout << "cs is " << cur_cs << ", should be " << (log_page->generation ^ log_page->num_entry) << endl;
+//            cout << "CHECKSUM NOT EQUAL BREAKING" << endl;
+            break;
+        }
+//        cout << "logpage generation is " << log_page->generation << endl;
+//        cout << "super block generation is " << my_super_block.cur_generation << endl;
+        // checkpoint || format gen++
         if(log_page->generation != my_super_block.cur_generation) break;
+        cout << "start reading log for setting graph, number of entry of this page is " << log_page->num_entry << endl;
         for(uint32_t j = 0; j < log_page->num_entry; ++j){
             log_entry single_log = log_page->logs[j];
+            cout << single_log.opcode << "  " << single_log.node_a << " " << single_log.node_b << endl;
             if(single_log.opcode == 0){
                 this->add_node(single_log.node_a);
             }else if(single_log.opcode == 1){
@@ -211,6 +226,7 @@ void graph::generate_edge_pairs(vector<pair<uint64_t, uint64_t>>& unique_pairs){
 }
 
 int graph::write_graph_to_vm(check_point& my_checkpoint, int fd){
+    cout << "starting checkpoint" << endl;
     vector<pair<uint64_t, uint64_t>> edge_pairs;
     this->generate_edge_pairs(edge_pairs);
     //long long offset = 2 * 1024 * 1024 * 1024 + 4096;
@@ -236,5 +252,14 @@ int graph::write_graph_to_vm(check_point& my_checkpoint, int fd){
     }
     clear_superblock_after_checkpoint(fd);
     my_checkpoint.size = edge_pairs.size();
+    check_point* written_check_point = (check_point*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, OFFSET);
+    written_check_point -> size =  my_checkpoint.size;
+    cout << "after checkpoint, size should be " << my_checkpoint.size << endl;
     return 200;
+}
+
+void graph::print(){
+    for(auto m : nodes){
+        cout << m.first << endl;
+    }
 }

@@ -12,8 +12,8 @@ using namespace std;
 static char *s_http_port = "8000";
 static struct mg_serve_http_opts s_http_server_opts;
 static bool flag = false;
-static char *devfile = "";
-static bool vm_on = false;
+static char *devfile = "/dev/sdb";
+static bool vm_on = true;
 static int fd = -1;
 static graph my_graph;
 static super_block my_super_block;
@@ -321,7 +321,7 @@ static void handle_shortest_path_call(struct mg_connection *nc, struct http_mess
     uint64_t path_length;
     pair<uint64_t, bool> result;
     
-//    int len = 20;
+    int len = 20;
     int i;
     for (i = 0; i < strlen(hm->body.p); i++) {
         if (hm->body.p[i] == ',') {
@@ -372,6 +372,9 @@ static void handle_checkpoint_call(struct mg_connection *nc, struct http_message
     my_checkpoint = read_checkpoint_from_vm(fd);
     if(res == 200){
         mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\n");
+        mg_printf(nc, "%s", ("Content-Length: " + to_string(hm->body.len + 100) + "\r\n").c_str());
+        mg_printf(nc, "%s", "Content-Type: application/json\r\n");
+        mg_printf(nc, "%s", "Transfer-Encoding: chunked\r\n\r\n");
     }else{
         mg_printf(nc, "%s", ("HTTP/1.1 " + to_string(507) + " Insufficient Storage\r\n").c_str());
     }
@@ -411,12 +414,13 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
     }
 }
 
+
 int main(int argc, char *argv[]) {
     struct mg_mgr mgr;
     struct mg_connection *nc;
     struct mg_bind_opts bind_opts;
-//    int i;
-//    char *cp;
+    int i;
+    char *cp;
     const char *err_str;
     mg_mgr_init(&mgr, NULL);
     //Process command line options to customize HTTP server
@@ -429,7 +433,11 @@ int main(int argc, char *argv[]) {
     if(argc == 3){
         if(strcmp(argv[1],"-f") == 0){
             flag = true;
-            devfile = argv[2];
+            if(atoi(argv[2])){
+                s_http_port = argv[2];
+            }else{
+                devfile = argv[2];
+            }
         }else{
             s_http_port = argv[1];
             devfile = argv[2];
@@ -438,19 +446,13 @@ int main(int argc, char *argv[]) {
     if(argc == 2){
         if(strcmp(argv[1],"-f") == 0){
             flag = true;
-        }else if(strcmp(argv[1], "/dev/sdb") == 0){
-            devfile = argv[1];
-        }else{
+        }else if(atoi(argv[1])){
             s_http_port = argv[1];
+        }else{
+            devfile = argv[1];
         }
     }
-    if(flag && (strcmp(devfile,"") == 0)){
-        fprintf(stderr, "invalid devfile\n");
-        exit(1);
-    }
-    if(strcmp(devfile,"") != 0){
-        vm_on = true;
-    }
+    
     if(vm_on){
         fd = open(devfile, O_RDWR | O_DIRECT); //
         if(flag){

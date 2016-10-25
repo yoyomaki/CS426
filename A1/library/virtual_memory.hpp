@@ -51,6 +51,7 @@ struct super_block{
 
 struct log_entry{
     uint32_t opcode;
+    uint32_t unused = 0;
     uint64_t node_a;
     uint64_t node_b; //only read node_b if op is 2 or 3
 };
@@ -59,7 +60,7 @@ struct log_block{
     uint32_t generation;
     uint32_t num_entry;
     uint64_t check_sum;
-    log_entry logs[204];
+    log_entry logs[170];
 };
 
 

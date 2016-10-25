@@ -27,7 +27,7 @@ struct node{
 class graph{
 private:
     unordered_map<uint64_t, node*> nodes;
-    void generate_edge_pairs(vector<pair<uint64_t, uint64_t>>& unique_pairs);
+    void generate_edge_pairs(vector<pair<uint64_t, uint64_t> >& unique_pairs);
 public:
     //return 200 on success, 204 if the node already exists
     uint64_t add_node(uint64_t node_id);
@@ -68,4 +68,6 @@ public:
     void set_graph_from_vm(check_point& my_checkpoint, super_block& my_super_block, int fd);
     
     int write_graph_to_vm(check_point& my_checkpoint, int fd);
+    
+    void print();
 };
