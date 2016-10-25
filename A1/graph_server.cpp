@@ -12,8 +12,8 @@ using namespace std;
 static char *s_http_port = "8000";
 static struct mg_serve_http_opts s_http_server_opts;
 static bool flag = false;
-static char *devfile = "";
-static bool vm_on = false;
+static char *devfile = "/dev/sdb";
+static bool vm_on = true;
 static int fd = -1;
 static int log_page_num = 0;
 static graph my_graph;
@@ -412,6 +412,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
     }
 }
 
+
 int main(int argc, char *argv[]) {
     struct mg_mgr mgr;
     struct mg_connection *nc;
@@ -430,7 +431,11 @@ int main(int argc, char *argv[]) {
     if(argc == 3){
         if(strcmp(argv[1],"-f") == 0){
             flag = true;
-            devfile = argv[2];
+            if(atoi(argv[2])){
+                s_http_port = argv[2];
+            }else{
+                devfile = argv[2];
+            }
         }else{
             s_http_port = argv[1];
             devfile = argv[2];
@@ -439,19 +444,13 @@ int main(int argc, char *argv[]) {
     if(argc == 2){
         if(strcmp(argv[1],"-f") == 0){
             flag = true;
-        }else if(strcmp(argv[1], "/dev/sdb") == 0){
-            devfile = argv[1];
-        }else{
+        }else if(atoi(argv[1])){
             s_http_port = argv[1];
+        }else{
+            devfile = argv[1];
         }
     }
-    if(flag && (strcmp(devfile,"") == 0)){
-        fprintf(stderr, "invalid devfile\n");
-        exit(1);
-    }
-    if(strcmp(devfile,"") != 0){
-        vm_on = true;
-    }
+    
     if(vm_on){
         fd = open(devfile, O_RDWR | O_DIRECT); //
         if(flag){
