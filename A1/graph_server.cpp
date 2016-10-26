@@ -405,6 +405,8 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
                 handle_shortest_path_call(nc, hm);
             }else if(mg_vcmp(&hm->uri, "/api/v1/checkpoint") == 0){
                 handle_checkpoint_call(nc, hm);
+//            }else if(mg_vcmp(&hm->uri, "/api/v1/print") == 0){
+//                my_graph.print();
             } else {
                 mg_serve_http(nc, hm, s_http_server_opts); /* Serve static content */
             }

@@ -229,7 +229,6 @@ int graph::write_graph_to_vm(check_point& my_checkpoint, int fd){
     cout << "starting checkpoint" << endl;
     vector<pair<uint64_t, uint64_t>> edge_pairs;
     this->generate_edge_pairs(edge_pairs);
-    //long long offset = 2 * 1024 * 1024 * 1024 + 4096;
     long long offset = OFFSET + (1 << 12);
     long long total_page_av = (OFFSET*5 - offset) / 4096;
     int total_page = edge_pairs.size() / 256;

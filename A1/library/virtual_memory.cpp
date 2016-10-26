@@ -96,8 +96,6 @@ void super_block::write_add_edge(uint64_t node_a_id, uint64_t node_b_id, int fd)
     }
 //    cout << "gen is " << cur_log_page->generation << endl;
 //    cout << "num entry on this page is " << cur_log_page->num_entry << " !!" <<cur_generation<< endl;
-//    msync(cur_log_page, 4096, MS_SYNC);
-//    munmap(cur_log_page, 4096);
 }
 
 void super_block::write_remove_edge(uint64_t node_a_id, uint64_t node_b_id, int fd){
